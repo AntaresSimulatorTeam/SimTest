@@ -24,7 +24,7 @@ def find_output_result_dir(output_dir):
     dir_list = []
     for x in list_dir:
         dir_path = Path(x)
-        if dir_path.is_dir() and (dir_path.name == "adequacy" or dir_path.name == "economy" or dir_path.name == "adequacy-draft"):
+        if dir_path.is_dir() and (dir_path.name in ["adequacy", "economy", "adequacy-draft"]):
             dir_list.append(x)
     assert len(dir_list) == 1
     return dir_list[0]
