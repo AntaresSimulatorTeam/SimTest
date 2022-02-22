@@ -14,7 +14,7 @@ jobs:
           matrix:
             solver: [8.0.3]
             tests_ref: [8.0.0]
-            subdir: [short, medium, long]
+            subdir: [short-tests, medium-tests, long-tests, valid-adq, valid-bind, valid-complex, valid-defaillance, valid-draft, valid-filter-outputs, valid-hydro, valid-hydroBind, valid-hydroPricing, valid-marginCost, valid-parallel, valid-thermal, valid-ts-gen-export]
 
         steps:
 
@@ -37,27 +37,24 @@ jobs:
           run: rm antares_simulator.tar.gz
 
         - name: Download Antares_Simulator_Tests
-          run: wget https://github.com/AntaresSimulatorTeam/Antares_Simulator_Tests/archive/refs/tags/v${{ matrix.tests_ref }}.tar.gz -O antares_simulator_tests.tar.gz
+          run: wget https://github.com/AntaresSimulatorTeam/Antares_Simulator_Tests_NR/releases/download/${{ matrix.tests_ref}}/${{ matrix.subdir }}.zip -O input.zip
 
-        - name: Unpack Antares_Simulator_Tests
-          run: tar xvf antares_simulator_tests.tar.gz
+        - name: Unpack test studies
+          run: unzip input.zip
 
-        - name: Remove archive Antares_Simulator_Tests
-          run: rm antares_simulator_tests.tar.gz
-
-        - name: Rename Antares_Simulator_Tests
-          run: mv Antares_Simulator_Tests-* Antares_Simulator_Tests
+        - name: Remove archive
+          run: rm input.zip
 
         - name: Generate results
-          run: python3 scripts/generate_reference.py Antares_Simulator_Tests/${{ matrix.subdir }}-tests antares-${{ matrix.solver }}-Ubuntu-20.04/bin
+          run: python3 scripts/generate_reference.py ${{ matrix.subdir }} antares-${{ matrix.solver }}-Ubuntu-20.04/bin
 
         - name: tar.gz results
-          run: tar zcf results.tar.gz Antares_Simulator_Tests/${{ matrix.subdir }}-tests
+          run: tar zcf results.tar.gz ${{ matrix.subdir }}
 
         - name: Upload .tar.gz
           uses: actions/upload-release-asset@v1.0.2
           with:
             upload_url: ${{ steps.get_release.outputs.upload_url }}
             asset_path: results.tar.gz
-            asset_name: Antares_Simulator_Tests-${{ matrix.solver}}-${{ matrix.tests_ref }}-${{ matrix.subdir }}.tar.gz
+            asset_name: ${{ matrix.subdir }}-${{ matrix.solver}}-${{ matrix.tests_ref }}.tar.gz
             asset_content_type: application/octet-stream
