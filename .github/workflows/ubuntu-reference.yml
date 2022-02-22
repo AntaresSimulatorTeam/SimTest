@@ -19,8 +19,8 @@ jobs:
         runs-on: ubuntu-latest
         steps:
         - name: Install Python requirements
-            run: pip3 install -r requirements.txt
+          run: pip3 install -r requirements.txt
         - name: Download Antares_Simulator archive
-            run: wget https://github.com/AntaresSimulatorTeam/Antares_Simulator/releases/download/v${{ github.event.inputs.as_base_version }}-${{ github.event.inputs.as_rc_beta }}/antares-${{ github.event.inputs.as_base_version}}-Ubuntu-20.04.tar.gz -O antares.tar.gz
+          run: wget https://github.com/AntaresSimulatorTeam/Antares_Simulator/releases/download/v${{ github.event.inputs.as_base_version }}-${{ github.event.inputs.as_rc_beta }}/antares-${{ github.event.inputs.as_base_version}}-Ubuntu-20.04.tar.gz -O antares.tar.gz
         - name: Extract archive
-            run: tar xvf antares.tar.gz
+          run: tar xvf antares.tar.gz
