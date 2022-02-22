@@ -30,13 +30,13 @@ jobs:
           run: tar xvf antares.tar.gz
 
         - name: Download Antares_Simulator_Tests
-          run: wget https://github.com/AntaresSimulatorTeam/Antares_Simulator_Tests/archive/refs/tags/${{ github.events.inputs.as_test_ref}}.tar.gz
+          run: wget https://github.com/AntaresSimulatorTeam/Antares_Simulator_Tests/archive/refs/tags/${{ github.event.inputs.as_test_ref}}.tar.gz
 
         - name: Unpack Antares_Simulator_Tests
-          run: tar xvf Antares_Simulator_Tests-${{ github.events.inputs.as_test_ref }}.tar.gz
+          run: tar xvf Antares_Simulator_Tests-${{ github.event.inputs.as_test_ref }}.tar.gz
 
         - name: Remove archive Antares_Simulator_Tests
-          run: rm Antares_Simulator_Tests-${{ github.events.inputs.as_test_ref }}.tar.gz
+          run: rm Antares_Simulator_Tests-${{ github.event.inputs.as_test_ref }}.tar.gz
 
         - name: Generate results
           run: python3 scripts/generate_reference.py Test_Studies/short-tests antares-${{ github.event.inputs.as_base_version}}-Ubuntu-20.04/bin
