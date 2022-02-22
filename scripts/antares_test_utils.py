@@ -62,7 +62,7 @@ def generate_reference_values(solver_path, path, use_ortools, ortools_solver):
     output_path = path / 'output'
     result_dir = find_output_result_dir(output_path)
 
-    reference_path = path / 'output' / 'reference'
+    reference_path = path / 'output' / 'reference' / result_dir.name
     shutil.move(result_dir, reference_path)
     return result
 
