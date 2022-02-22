@@ -52,7 +52,7 @@ jobs:
           run: python3 scripts/generate_reference.py Antares_Simulator_Tests/${{ matrix.subdir }}-tests antares-${{ matrix.solver }}-Ubuntu-20.04/bin
 
         - name: tar.gz results
-          run: tar zcf results.tar.gz Antares_Simulator_Tests/$${ matrix.subdir }}-tests
+          run: tar zcf results.tar.gz Antares_Simulator_Tests/${{ matrix.subdir }}-tests
 
         - name: Upload .tar.gz
           uses: actions/upload-release-asset@v1.0.2
