@@ -4,6 +4,9 @@ on:
   release:
     types: [created]
 
+env:
+  GITHUB_TOKEN: ${{ github.token }}
+
 jobs:
     main:
         runs-on: ubuntu-latest
