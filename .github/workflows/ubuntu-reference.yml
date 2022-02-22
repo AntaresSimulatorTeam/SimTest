@@ -6,7 +6,7 @@ on:
       as_base_version:
         description: 'Version of Antares_Simulator, excluding RC, beta, etc.'
         required: true
-        default: 'warning'
+        default: '8.0.3'
       as_rc_beta:
         description : 'RC1, beta, etc.'
         required: false
@@ -22,7 +22,12 @@ jobs:
           uses: actions/checkout@v2
         - name: Install Python requirements
           run: pip3 install -r requirements.txt
-        - name: Download Antares_Simulator archive
+        - name: Download Antares_Simulator archive (RC, Beta, etc.)
+          if: ${{ github.event.inputs.as_rc_beta }} != ''
           run: wget https://github.com/AntaresSimulatorTeam/Antares_Simulator/releases/download/v${{ github.event.inputs.as_base_version }}-${{ github.event.inputs.as_rc_beta }}/antares-${{ github.event.inputs.as_base_version}}-Ubuntu-20.04.tar.gz -O antares.tar.gz
+        - name: Download Antares_Simulator archive
+          if: ${{ github.event.inputs.as_rc_beta }} == ''
+          run: wget https://github.com/AntaresSimulatorTeam/Antares_Simulator/releases/download/v${{ github.event.inputs.as_base_version }}/antares-${{ github.event.inputs.as_base_version}}-Ubuntu-20.04.tar.gz -O antares.tar.gz
+
         - name: Extract archive
           run: tar xvf antares.tar.gz
