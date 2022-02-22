@@ -37,4 +37,4 @@ jobs:
             ref: ${{ github.events.inputs.as_test_ref}}
 
         - name: Generate results
-          run: python3 scripts/generate_reference.py antares-8.0.3-Ubuntu-20.04/bin Test_Studies/short-tests
+          run: python3 scripts/generate_reference.py Test_Studies/short-tests antares-${{ github.event.inputs.as_base_version}}-Ubuntu-20.04/bin
