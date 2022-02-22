@@ -1,23 +1,23 @@
 name: Ubuntu reference generation
 
 on:
-  workflow_dispatch:
-    inputs:
-      as_base_version:
-        description: 'Version of Antares_Simulator. RC, beta, unsupported for now.'
-        required: true
-        default: '8.0.3'
-      as_test_version:
-        description: 'Version for Antares_Simulator_Tests'
-        required: true
-        default: '8.0.0'
-      tags:
-        description: 'Add a description here'
+  release:
+    types: [created]
 
 jobs:
     main:
         runs-on: ubuntu-latest
+        strategy:
+          matrix:
+            solver: [8.0.3]
+            tests: [8.0.0]
+
         steps:
+
+        - name: Get release
+          id: get_release
+          uses: bruceadams/get-release@v1.2.3
+
         - name: Checkout SimTest
           uses: actions/checkout@v2
 
@@ -25,7 +25,7 @@ jobs:
           run: pip3 install -r requirements.txt
 
         - name: Download Antares_Simulator archive
-          run: wget https://github.com/AntaresSimulatorTeam/Antares_Simulator/releases/download/v${{ github.event.inputs.as_base_version }}/antares-${{ github.event.inputs.as_base_version }}-Ubuntu-20.04.tar.gz -O antares_simulator.tar.gz
+          run: wget https://github.com/AntaresSimulatorTeam/Antares_Simulator/releases/download/v${{ matrix.solver }}/antares-${{ matrix.solver }}-Ubuntu-20.04.tar.gz -O antares_simulator.tar.gz
         - name: Unpack Antares_Simulator
           run: tar xvf antares_simulator.tar.gz
 
@@ -33,7 +33,7 @@ jobs:
           run: rm antares_simulator.tar.gz
 
         - name: Download Antares_Simulator_Tests
-          run: wget https://github.com/AntaresSimulatorTeam/Antares_Simulator_Tests/archive/refs/tags/v${{ github.event.inputs.as_test_version }}.tar.gz -O antares_simulator_tests.tar.gz
+          run: wget https://github.com/AntaresSimulatorTeam/Antares_Simulator_Tests/archive/refs/tags/v${{ matrix.tests }}.tar.gz -O antares_simulator_tests.tar.gz
 
         - name: Unpack Antares_Simulator_Tests
           run: tar xvf antares_simulator_tests.tar.gz
@@ -45,4 +45,15 @@ jobs:
           run: mv Antares_Simulator_Tests-* Antares_Simulator_Tests
 
         - name: Generate results
-          run: python3 scripts/generate_reference.py Antares_Simulator_Tests/short-tests antares-${{ github.event.inputs.as_base_version }}-Ubuntu-20.04/bin
+          run: python3 scripts/generate_reference.py Antares_Simulator_Tests/short-tests antares-${{ matrix.solver }}-Ubuntu-20.04/bin
+
+        - name: tar.xz results
+          run: tar Jvf Antares_Simulator_Tests.tar.xz Antares_Simulator_Tests
+
+        - name: Upload .tar.xz
+          uses: actions/upload-release-asset@v1.0.2
+          with:
+            upload_url: ${{ steps.get_release.outputs.upload_url }}
+            asset_path: Antares_Simulator_Tests.tar.xz
+            asset_name: Antares_Simulator_Tests-${{ matrix.solver}}-${{ matrix.tests }}.tar.xz
+            asset_content_type: application/octet-stream
