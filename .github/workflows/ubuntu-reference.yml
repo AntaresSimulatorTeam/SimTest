@@ -25,9 +25,6 @@ jobs:
         - name: Checkout SimTest
           uses: actions/checkout@v2
 
-        - name: Install Python requirements
-          run: pip3 install -r requirements.txt
-
         - name: Download Antares_Simulator archive
           run: wget https://github.com/AntaresSimulatorTeam/Antares_Simulator/releases/download/v${{ matrix.solver }}/antares-${{ matrix.solver }}-Ubuntu-20.04.tar.gz -O antares_simulator.tar.gz
         - name: Unpack Antares_Simulator
