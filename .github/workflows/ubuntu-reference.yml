@@ -51,13 +51,13 @@ jobs:
         - name: Generate results
           run: python3 scripts/generate_reference.py Antares_Simulator_Tests/${{ matrix.subdir }}-tests antares-${{ matrix.solver }}-Ubuntu-20.04/bin
 
-        - name: tar.xz results
-          run: tar Jcf Antares_Simulator_Tests.tar.xz Antares_Simulator_Tests
+        - name: tar.gz results
+          run: tar zcf Antares_Simulator_Tests.tar.xz Antares_Simulator_Tests
 
-        - name: Upload .tar.xz
+        - name: Upload .tar.gz
           uses: actions/upload-release-asset@v1.0.2
           with:
             upload_url: ${{ steps.get_release.outputs.upload_url }}
-            asset_path: Antares_Simulator_Tests.tar.xz
-            asset_name: Antares_Simulator_Tests-${{ matrix.solver}}-${{ matrix.tests_ref }}.tar.xz
+            asset_path: Antares_Simulator_Tests.tar.gz
+            asset_name: Antares_Simulator_Tests-${{ matrix.solver}}-${{ matrix.tests_ref }}-${{ matrix.subdir }}.tar.gz
             asset_content_type: application/octet-stream
