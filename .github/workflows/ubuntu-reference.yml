@@ -34,7 +34,7 @@ jobs:
           run: rm antares_simulator.tar.gz
 
         - name: Download Antares_Simulator_Tests
-          run: wget https://github.com/AntaresSimulatorTeam/Antares_Simulator_Tests_NR/releases/download/$v{{ matrix.tests_ref}}/${{ matrix.subdir }}.zip -O input.zip
+          run: wget https://github.com/AntaresSimulatorTeam/Antares_Simulator_Tests_NR/releases/download/v${{ matrix.tests_ref}}/${{ matrix.subdir }}.zip -O input.zip
 
         - name: Unpack test studies
           run: unzip input.zip
