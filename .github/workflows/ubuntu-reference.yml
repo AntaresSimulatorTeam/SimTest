@@ -1,7 +1,7 @@
 name: Ubuntu reference generation
 
 on:
-  workflow_dispatch
+  workflow_dispatch:
     inputs:
       as_base_version:
         description: 'Version of Antares_Simulator, excluding RC, beta, etc.'
