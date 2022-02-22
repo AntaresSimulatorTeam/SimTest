@@ -66,10 +66,6 @@ def generate_reference_values(solver_path, path, use_ortools, ortools_solver):
     shutil.move(result_dir, reference_path)
     return result
 
-def run_study(solver_path, path, use_ortools, ortools_solver):
-    # Launch antares-solver
-    launch_solver(solver_path, path, use_ortools, ortools_solver)
-
 def enable_study_output(study_path, enable):
     st = Study(str(study_path))
     st.check_files_existence()
@@ -77,46 +73,3 @@ def enable_study_output(study_path, enable):
     synthesis_value = "true" if enable else "false"
     st.set_variable(variable = "synthesis", value = synthesis_value, file_nick_name="general")
 
-def compare_directory(result_dir, reference_dir):
-    assert (result_dir.is_dir())
-    assert (reference_dir.is_dir())
-
-    uncompared_file_name = ['id-daily.txt', 'id-hourly.txt']
-
-    for x in result_dir.iterdir():
-        if x.is_dir():
-            if x.name != 'grid':
-                compare_directory(x, reference_dir / x.name)
-        else:
-
-
-            if not x.name in uncompared_file_name:
-                output_df = read_csv(x)
-                ref_df = read_csv(reference_dir / x.name)
-
-                reference_headers = get_headers(ref_df)
-                output_headers = get_headers(output_df)
-
-                assert reference_headers.issubset(output_headers), f"The following column(s) is missing from the output {reference_headers.difference(output_headers)}"
-
-                for col_name in reference_headers:
-                    rtol = 1e-4
-                    atol = 0
-
-                    if sys.platform=="linux":
-                        trimmed_name = trim_digit_after_last_dot(col_name)
-                        if trimmed_name in RTOL_OVERRIDE_LINUX:
-                            rtol = RTOL_OVERRIDE_LINUX[trimmed_name]
-                        if trimmed_name in ATOL_OVERRIDE_LINUX:
-                            atol = ATOL_OVERRIDE_LINUX[trimmed_name]
-                    try:
-                        pd.testing.assert_series_equal(ref_df[col_name], output_df[col_name], atol=atol, rtol=rtol)
-                    except AssertionError: # Catch and re-raise exception to print col_name & tolerances
-                        raise AssertionError(f"In file {x.name}, columns {col_name} have differences (atol={atol}, rtol={rtol})")
-
-
-def check_output_values(study_path):
-    result_dir = find_output_result_dir(study_path / 'output')
-    reference_dir = find_output_result_dir(study_path / 'reference')
-    compare_directory(result_dir, reference_dir)
-    remove_outputs(study_path)
