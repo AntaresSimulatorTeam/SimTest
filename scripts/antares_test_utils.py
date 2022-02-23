@@ -1,5 +1,4 @@
 from pathlib import Path
-import os
 import glob
 import shutil
 import subprocess
@@ -14,6 +13,19 @@ def list_directories(directory):
         if x.is_dir():
             dir_list.append(x)
     return dir_list
+
+def list_studies(directory):
+    studies = []
+    dir_path = Path(directory)
+    if (dir_path.is_dir()):
+        study = Study(dir_path)
+        if study.check_files_existence():
+            studies.append(directory)
+        else:
+            for x in dir_path.iterdir():
+                studies.extend(list_studies(x))
+
+    return studies
 
 def find_output_result_dir(output_dir):
     list_output_dir = list_directories(output_dir)
@@ -55,7 +67,7 @@ def launch_solver(solver_path, study_path, use_ortools = False, ortools_solver =
 
 def generate_reference_values(solver_path, path, use_ortools, ortools_solver):
 
-    enable_study_output(path,True)
+    enable_study_output(path, True)
 
     result = launch_solver(solver_path,path, use_ortools, ortools_solver)
 
@@ -70,8 +82,9 @@ def generate_reference_values(solver_path, path, use_ortools, ortools_solver):
     return result
 
 def enable_study_output(study_path, enable):
-    st = Study(str(study_path))
-    st.check_files_existence()
+    st = Study(study_path)
+    if not st.check_files_existence():
+        raise RuntimeError("Missing file")
 
     synthesis_value = "true" if enable else "false"
     st.set_variable(variable = "synthesis", value = synthesis_value, file_nick_name="general")

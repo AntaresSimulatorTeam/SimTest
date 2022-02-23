@@ -1,54 +1,41 @@
-import os
-import sys
+from pathlib import Path
 
 class Study:
-	"""
-		Class Study
-	"""
-	def __init__(self, dir):
-		"""
-			Constructor
-		"""
-		self.name = os.path.basename(dir)
+    """
+        Class Study
+    """
+    def __init__(self, dir_path):
+        assert isinstance(dir_path, Path)
+        self.study_dir = dir_path
+        self.files_path = {}
+        self.files_path["desktop"]     = self.study_dir / "Desktop.ini"
+        self.files_path["general"]     = self.study_dir / "settings" / "generaldata.ini"
+        self.files_path["study"]     = self.study_dir / "study.antares"
 
-		# print "+ Building study : %s" % self.name
-		self.study_dir = dir
+    def check_files_existence(self):
+        return all([x.is_file() for x in self.files_path.values()])
 
-		self.files_path = {}
-		self.files_path["desktop"] 	= self.study_dir + os.sep + "Desktop.ini"
-		self.files_path["general"] 	= self.study_dir + os.sep + "settings" + os.sep + "generaldata.ini"
-		self.files_path["study"] 	= self.study_dir + os.sep + "study.antares"
+    def set_variable(self, variable, value, file_nick_name):
+        """
+            Setting variable with a value in a file
+        """
+        # File path
+        file = self.files_path[file_nick_name]
 
-	def check_files_existence(self):
-		"""
-			Checking file existence
-		"""
-		for file_path in self.files_path.values():
-			if not os.path.isfile(file_path):
-				print("	File does not exist : %s" % file_path)
-				sys.exit(1)
+        # Content to print in file (tmp content)
+        content_out = []
 
-	def set_variable(self, variable, value, file_nick_name):
-		"""
-			Setting variable with a value in a file
-		"""
-		# File path
-		file = self.files_path[file_nick_name]
+        # Reading the file content (content in)
+        with open(file) as f:
+            content_in = f.readlines()
 
-		# Content to print in file (tmp content)
-		content_out = []
+        # Searching variable and setting its value in a tmp content
+        for line in content_in:
+            if line.strip().startswith(variable):
+                content_out.append(variable + " = " + value + "\n")
+            else:
+                content_out.append(line)
 
-		# Reading the file content (content in)
-		with open(file) as f:
-			content_in = f.readlines()
-
-		# Searching variable and setting its value in a tmp content
-		for line in content_in:
-			if line.strip().startswith(variable):
-				content_out.append(variable + " = " + value + "\n")
-			else:
-				content_out.append(line)
-
-		# Erasing file content with the tmp content (content out)
-		with open(file, "w") as f:
-			f.writelines(content_out)
+        # Erasing file content with the tmp content (content out)
+        with open(file, "w") as f:
+            f.writelines(content_out)
