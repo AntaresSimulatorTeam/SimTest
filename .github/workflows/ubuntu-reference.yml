@@ -46,6 +46,7 @@ jobs:
 
     generation:
         runs-on: ubuntu-latest
+        needs: release
         strategy:
           matrix:
             subdir: [short-tests, medium-tests, long-tests-1, long-tests-2, valid-adq, valid-bind, valid-complex, valid-defaillance, valid-draft, valid-filter-outputs, valid-hydro, valid-hydroBind, valid-hydroPricing, valid-marginCost, valid-parallel, valid-thermal, valid-ts-gen-export]
