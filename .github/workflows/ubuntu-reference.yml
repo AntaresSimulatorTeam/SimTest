@@ -66,8 +66,8 @@ jobs:
             cd antares-solver-tmp
             tar xvf antares_simulator.tar.gz
             rm antares_simulator.tar.gz
+            mv * ..
             cd ..
-            mv "antares-solver-tmp/*" .
             rm -rf antares-solver-tmp
           shell: bash
 
