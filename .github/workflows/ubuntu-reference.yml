@@ -38,6 +38,7 @@ jobs:
 
         - name: Output Release URL File
           run: echo "${{ steps.create_release.outputs.upload_url }}" > release_url.txt
+
         - name: Save Release URL File for generation
           uses: actions/upload-artifact@v1
           with:
@@ -99,7 +100,7 @@ jobs:
           env:
             GITHUB_TOKEN: ${{ github.token }}
           with:
-            upload_url: ${{ steps.create_release.outputs.upload_url }}
+            upload_url: ${{ steps.get_release_info.outputs.upload_url }}
             asset_path: results.tar.gz
             asset_name: ${{ matrix.subdir }}-${{ github.event.inputs.antares_tag }}-${{ github.event.inputs.antares_tests_tag }}.tar.gz
             asset_content_type: application/octet-stream
