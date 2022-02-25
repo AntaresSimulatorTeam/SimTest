@@ -38,7 +38,7 @@ jobs:
 
         - name: Output Release URL File
           run: echo "${{ steps.create_release.outputs.upload_url }}" > release_url.txt
-        - name: Save Release URL File for publish
+        - name: Save Release URL File for generation
           uses: actions/upload-artifact@v1
           with:
             name: release_url
@@ -54,6 +54,11 @@ jobs:
         steps:
         - name: Checkout SimTest
           uses: actions/checkout@v2
+
+        - name: Load Release URL File from release job
+          uses: actions/download-artifact@v1
+          with:
+            name: release_url
 
         - name: Download Antares_Simulator archive
           run: |
