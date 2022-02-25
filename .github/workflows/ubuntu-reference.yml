@@ -36,7 +36,8 @@ jobs:
         - name: Download Antares_Simulator archive
           run: |
             mkdir antares-solver-tmp
-            wget https://github.com/AntaresSimulatorTeam/Antares_Simulator/releases/download/${{ github.event.inputs.antares_tag }}/antares-${${{ github.event.inputs.antares_tag }}/v/}-Ubuntu-20.04.tar.gz -O antares-solver-tmp/antares_simulator.tar.gz
+            ANTARES_TAG=${{ github.event.inputs.antares_tests_tag }}
+            wget https://github.com/AntaresSimulatorTeam/Antares_Simulator/releases/download/${{ github.event.inputs.antares_tag }}/antares-${ANTARES_TAG//v/}-Ubuntu-20.04.tar.gz -O antares-solver-tmp/antares_simulator.tar.gz
             
         - name: Unpack Antares_Simulator, clean archive
           run: |
