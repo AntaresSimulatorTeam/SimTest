@@ -22,10 +22,6 @@ on:
         default: v8.0.0
         required: true
 
-on:
-  release:
-    types: [created]
-
 jobs:
     main:
         runs-on: ubuntu-latest
