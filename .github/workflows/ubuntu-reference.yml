@@ -1,57 +1,87 @@
 name: Ubuntu reference generation
 
 on:
+  # Manual launch
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "Release tag"
+        required: true
+      release_name:
+        description: "Release name"
+        required: true
+      release_body:
+        description: "Release body"
+        required: true
+      antares_tag:
+        description: "Antares_Simulator solver tag"
+        default: v8.0.3
+        required: true
+      antares_tests_tag:
+        description: "Antares_Simulator_Tests_NR"
+        default: v8.0.0
+        required: true
+
+on:
   release:
     types: [created]
-
-env:
-  GITHUB_TOKEN: ${{ github.token }}
 
 jobs:
     main:
         runs-on: ubuntu-latest
         strategy:
           matrix:
-            solver: [8.0.3]
-            tests_ref: [8.0.0]
             subdir: [short-tests, medium-tests, long-tests-1, long-tests-2, valid-adq, valid-bind, valid-complex, valid-defaillance, valid-draft, valid-filter-outputs, valid-hydro, valid-hydroBind, valid-hydroPricing, valid-marginCost, valid-parallel, valid-thermal, valid-ts-gen-export]
 
         steps:
-
-        - name: Get release
-          id: get_release
-          uses: bruceadams/get-release@v1.2.3
-
         - name: Checkout SimTest
           uses: actions/checkout@v2
 
         - name: Download Antares_Simulator archive
-          run: wget https://github.com/AntaresSimulatorTeam/Antares_Simulator/releases/download/v${{ matrix.solver }}/antares-${{ matrix.solver }}-Ubuntu-20.04.tar.gz -O antares_simulator.tar.gz
-        - name: Unpack Antares_Simulator
-          run: tar xvf antares_simulator.tar.gz
-
-        - name: Remove archive for Antares_Simulator
-          run: rm antares_simulator.tar.gz
+          run: |
+            mkdir antares-solver-tmp
+            wget https://github.com/AntaresSimulatorTeam/Antares_Simulator/releases/download/${{ github.event.inputs.antares_tag }}/antares-${{ github.event.inputs.antares_tag }}-Ubuntu-20.04.tar.gz -O antares-solver-tmp/antares_simulator.tar.gz
+            
+        - name: Unpack Antares_Simulator, clean archive
+          run: |
+            cd antares-solver-tmp
+            tar xvf antares_simulator.tar.gz
+            rm antares_simulator.tar.gz
+            cd ..
+            mv "antares-solver-tmp/*" .
+            rm -rf antares-solver-tmp
+          shell: bash
 
         - name: Download Antares_Simulator_Tests
-          run: wget https://github.com/AntaresSimulatorTeam/Antares_Simulator_Tests_NR/releases/download/v${{ matrix.tests_ref}}/${{ matrix.subdir }}.zip -O input.zip
+          run: wget https://github.com/AntaresSimulatorTeam/Antares_Simulator_Tests_NR/releases/download/${{ github.event.inputs.antares_tests_tag }}/${{ matrix.subdir }}.zip -O input.zip
 
-        - name: Unpack test studies
-          run: unzip input.zip
-
-        - name: Remove archive
-          run: rm input.zip
+        - name: Unpack test studies, clean archive
+          run: |
+            unzip input.zip
+            rm input.zip
 
         - name: Generate results
-          run: python3 scripts/generate_reference.py ${{ matrix.subdir }} antares-${{ matrix.solver }}-Ubuntu-20.04/bin
+          run: python3 scripts/generate_reference.py ${{ matrix.subdir }} antares-simulator/bin
 
         - name: tar.gz results
           run: tar zcf results.tar.gz ${{ matrix.subdir }}
 
-        - name: Upload .tar.gz
-          uses: actions/upload-release-asset@v1.0.2
+        - name: Release creation
+          uses: actions/create-release@v1
+          id: create_release
+          env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           with:
-            upload_url: ${{ steps.get_release.outputs.upload_url }}
+            tag_name: ${{ github.event.inputs.release_tag }}
+            release_name: ${{ github.event.inputs.release_name }}
+            body: ${{ github.event.inputs.release_body }}
+
+        - name: Upload .tar.gz
+          uses: actions/upload-release-asset@v1
+          env:
+            GITHUB_TOKEN: ${{ github.token }}
+          with:
+            upload_url: ${{ steps.create_release.outputs.upload_url }}
             asset_path: results.tar.gz
-            asset_name: ${{ matrix.subdir }}-${{ matrix.solver}}-${{ matrix.tests_ref }}.tar.gz
+            asset_name: ${{ matrix.subdir }}-${{ github.event.inputs.antares_tag }}-${{ github.event.inputs.antares_tests_tag }}.tar.gz
             asset_content_type: application/octet-stream
