@@ -14,7 +14,7 @@ jobs:
           matrix:
             solver: [8.0.3]
             tests_ref: [8.0.0]
-            subdir: [short-tests, medium-tests, long-tests, valid-adq, valid-bind, valid-complex, valid-defaillance, valid-draft, valid-filter-outputs, valid-hydro, valid-hydroBind, valid-hydroPricing, valid-marginCost, valid-parallel, valid-thermal, valid-ts-gen-export]
+            subdir: [short-tests, medium-tests, long-tests-1, long-tests-2, valid-adq, valid-bind, valid-complex, valid-defaillance, valid-draft, valid-filter-outputs, valid-hydro, valid-hydroBind, valid-hydroPricing, valid-marginCost, valid-parallel, valid-thermal, valid-ts-gen-export]
 
         steps:
 
