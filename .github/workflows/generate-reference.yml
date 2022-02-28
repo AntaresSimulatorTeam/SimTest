@@ -62,7 +62,6 @@ jobs:
             name: release_url
 
         - name: Pre-requisites (Windows)
-          shell: cmd
           if: startsWith(${{ matrix.os }}, "windows")
           run: choco install wget unzip --no-progress
 
