@@ -23,7 +23,7 @@ jobs:
     release:
       runs-on: ubuntu-latest
       outputs:
-        release_url: ${{ steps.create_release.outputs.upload_url }}
+        url: ${{ steps.create_release.outputs.upload_url }}
       steps:
         - name: Release creation
           uses: actions/create-release@v1
@@ -107,7 +107,7 @@ jobs:
           env:
             GITHUB_TOKEN: ${{ github.token }}
           with:
-            upload_url: ${{ needs.release.outputs.upload_url }}
+            upload_url: ${{ needs.release.outputs.url }}
             asset_path: results.zip
             asset_name: ${{ matrix.subdir }}-${{ github.event.inputs.antares_tag }}-${{ github.event.inputs.antares_tests_tag }}-${{ matrix.os }}.zip
             asset_content_type: application/octet-stream
