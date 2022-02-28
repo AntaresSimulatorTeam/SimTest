@@ -22,6 +22,8 @@ on:
 jobs:
     release:
       runs-on: ubuntu-latest
+      outputs:
+        release_url: ${{ steps.create_release.outputs.upload_url }}
       steps:
         - name: Release creation
           uses: actions/create-release@v1
@@ -35,15 +37,6 @@ jobs:
               Antares_Simulator : ${{ github.event.inputs.antares_tag }}
               Antares_Simulator_Tests_NR : ${{ github.event.inputs.antares_tests_tag }}
 
-        - name: Output Release URL File
-          run: echo "${{ steps.create_release.outputs.upload_url }}" > release_url.txt
-
-        - name: Save Release URL File for generation
-          uses: actions/upload-artifact@v1
-          with:
-            name: release_url
-            path: release_url.txt
-
     generation:
         runs-on: ${{ matrix.os }}
         needs: release
@@ -55,11 +48,6 @@ jobs:
         steps:
         - name: Checkout SimTest
           uses: actions/checkout@v2
-
-        - name: Load Release URL File from release job
-          uses: actions/download-artifact@v1
-          with:
-            name: release_url
 
         - name: Pre-requisites (Windows)
           if: ${{ startsWith(matrix.os, 'windows') }}
@@ -114,19 +102,12 @@ jobs:
         - name: zip results
           run: zip -r results.zip ${{ matrix.subdir }}
 
-        - name: Get Release File Name & Upload URL
-          id: get_release_info
-          run: |
-            echo ::set-output name=file_name::${REPOSITORY_NAME##*/}-${TAG_REF_NAME##*/v} # RepositoryName-v1.0.0
-            value=`cat release_url/release_url.txt`
-            echo ::set-output name=upload_url::$value
-
         - name: Upload .zip
           uses: actions/upload-release-asset@v1
           env:
             GITHUB_TOKEN: ${{ github.token }}
           with:
-            upload_url: ${{ steps.get_release_info.outputs.upload_url }}
+            upload_url: ${{ needs.release.outputs.upload_url }}
             asset_path: results.zip
             asset_name: ${{ matrix.subdir }}-${{ github.event.inputs.antares_tag }}-${{ github.event.inputs.antares_tests_tag }}-${{ matrix.os }}.zip
             asset_content_type: application/octet-stream
