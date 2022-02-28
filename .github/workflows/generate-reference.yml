@@ -69,13 +69,13 @@ jobs:
         - name: Unpack Antares_Simulator, clean archive (Ubuntu)
           if: ${{ startsWith(matrix.os, 'ubuntu') }}
           run: |
-            tar xvf antares_simulator.tar.gz
+            tar xf antares_simulator.tar.gz
             rm antares_simulator.tar.gz
 
         - name: Unpack Antares_Simulator, clean archive (Windows)
           if: ${{ startsWith(matrix.os, 'windows') }}
           run: |
-            unzip antares_simulator.zip
+            unzip -q antares_simulator.zip
             rm antares_simulator.zip
 
         - name: Download Antares_Simulator_Tests
@@ -83,7 +83,7 @@ jobs:
 
         - name: Unpack test studies, clean archive
           run: |
-            unzip input.zip
+            unzip -q input.zip
             rm input.zip
 
         - name: Generate results (Ubuntu)
