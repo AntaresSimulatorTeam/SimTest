@@ -85,6 +85,7 @@ jobs:
             rm antares_simulator.tar.gz
 
         - name: Unpack Antares_Simulator, clean archive (Windows)
+          if: ${{ startsWith(matrix.os, 'windows') }}
           run: |
             unzip antares_simulator.zip
             rm antares_simulator.zip
