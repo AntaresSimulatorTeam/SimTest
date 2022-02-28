@@ -2,6 +2,7 @@ import argparse
 from pathlib import Path
 import re
 import antares_test_utils as antares_utils
+import sys
 
 parser = argparse.ArgumentParser()
 parser.add_argument("root", help="Directory containing studies",
@@ -15,13 +16,18 @@ root = Path(args.root).resolve()
 solver_path = Path(args.solver).resolve()
 
 def find_solver(solver):
+    if sys.platform.startswith("win"):
+        suffix=".exe"
+    else:
+        suffix=""
+
     solver_path = Path(solver)
     if solver_path.is_file():
         return solver.resolve()
     if solver_path.is_dir():
         results = []
         for x in solver_path.iterdir():
-            if x.is_file() and re.match("^antares-[0-9]+\.[0-9]+-solver$", x.name):
+            if x.is_file() and re.match(f"^antares-[0-9]+\.[0-9]+-solver{suffix}$", x.name):
                 results.append(x)
         assert(len(results) == 1)
         return results[0].resolve()
