@@ -109,6 +109,7 @@ jobs:
           run: |
             ANTARES_TAG=${{ github.event.inputs.antares_tag }}
             python3 scripts/generate_reference.py ${{ matrix.subdir }} rte-antares-${{ github.event.inputs.antares_tag }}-installer-64bits/bin
+          shell: bash
 
         - name: zip results
           run: zip -r results.zip ${{ matrix.subdir }}
