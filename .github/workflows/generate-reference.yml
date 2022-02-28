@@ -104,7 +104,7 @@ jobs:
             python3 scripts/generate_reference.py ${{ matrix.subdir }} antares-${ANTARES_TAG/v/}-Ubuntu-20.04/bin
 
         - name: Generate results (Windows)
-          if: ${{ startsWith(matrix.os, windows") }}
+          if: ${{ startsWith(matrix.os, 'windows') }}
           run: |
             ANTARES_TAG=${{ github.event.inputs.antares_tag }}
             python3 scripts/generate_reference.py ${{ matrix.subdir }} rte-antares-${{ github.event.inputs.antares_tag }}-installer-64bits/bin
