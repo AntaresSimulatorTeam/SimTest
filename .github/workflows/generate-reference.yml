@@ -63,7 +63,7 @@ jobs:
 
         - name: Pre-requisites (Windows)
           if: ${{ startsWith(matrix.os, 'windows') }}
-          run: choco install wget unzip --no-progress
+          run: choco install wget zip unzip --no-progress
 
         - name: Download Antares_Simulator archive (Ubuntu)
           if: ${{ startsWith(matrix.os, 'ubuntu') }}
