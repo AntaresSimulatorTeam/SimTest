@@ -10,9 +10,6 @@ on:
       release_name:
         description: "Release name"
         required: true
-      release_body:
-        description: "Release body"
-        required: true
       antares_tag:
         description: "Antares_Simulator solver tag"
         default: v8.0.3
@@ -34,7 +31,9 @@ jobs:
           with:
             tag_name: ${{ github.event.inputs.release_tag }}
             release_name: ${{ github.event.inputs.release_name }}
-            body: ${{ github.event.inputs.release_body }}
+            body: |
+              Antares_Simulator : ${{ github.event.inputs.antares_tag }}
+              Antares_Simulator_Tests_NR : ${{ github.event.inputs.antares_tests_tag }}
 
         - name: Output Release URL File
           run: echo "${{ steps.create_release.outputs.upload_url }}" > release_url.txt
