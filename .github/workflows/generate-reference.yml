@@ -37,11 +37,11 @@ jobs:
               Antares_Simulator : ${{ github.event.inputs.antares_tag }}
               Antares_Simulator_Tests_NR : ${{ github.event.inputs.antares_tests_tag }}
 
-      matrix:
-        runs-on: ubuntu-latest
-        needs: release
-        outputs:
-          batches: ${{ steps.read_batches.outputs.batches }}
+    matrix:
+      runs-on: ubuntu-latest
+      needs: release
+      outputs:
+        batches: ${{ steps.read_batches.outputs.batches }}
 
         - name: Download study-batches.txt
           run: |
