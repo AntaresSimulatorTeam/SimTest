@@ -37,12 +37,38 @@ jobs:
               Antares_Simulator : ${{ github.event.inputs.antares_tag }}
               Antares_Simulator_Tests_NR : ${{ github.event.inputs.antares_tests_tag }}
 
+      matrix:
+        runs-on: ubuntu-latest
+        needs: release
+        outputs:
+          batches: ${{ steps.read_batches.outputs.batches }}
+
+        - name: Download study-batches.txt
+          run: |
+            wget https://github.com/AntaresSimulatorTeam/Antares_Simulator_Tests_NR/releases/download/${{ github.event.inputs.antares_tests_tag }}/study-batches.txt
+
+        - name: Read study-batches.txt
+          id: read_batches
+          run: |
+            BATCHES=$(printf "\"%s\"," $(cat study-batches.txt) | sed "s/^/[/;s/,$/]/")
+            echo "::set-output name=batches::$BATCHES"
+
+        - name: Upload study-batches.txt
+          uses: actions/upload-release-asset@v1
+          env:
+            GITHUB_TOKEN: ${{ github.token }}
+          with:
+            upload_url: ${{ needs.release.outputs.url }}
+            asset_path: study-batches.txt
+            asset_name: study-batches.txt
+            asset_content_type: application/octet-stream
+
     generation:
         runs-on: ${{ matrix.os }}
-        needs: release
+        needs: release, matrix
         strategy:
           matrix:
-            subdir: [short-tests, medium-tests, long-tests-1, long-tests-2, valid-adq, valid-bind, valid-complex, valid-defaillance, valid-draft, valid-filter-outputs, valid-hydro, valid-hydroBind, valid-hydroPricing, valid-marginCost, valid-parallel, valid-thermal, valid-ts-gen-export]
+            batch: ${{ fromJson(needs.matrix.outputs.batches) }}
             os: [ubuntu-latest, windows-latest]
 
         steps:
