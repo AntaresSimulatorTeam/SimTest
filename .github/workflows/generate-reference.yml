@@ -129,7 +129,7 @@ jobs:
         - name: Write tags to file
           shell: bash
           run: |
-              echo Antares_Simulator $${{ github.event.inputs.antares_tag }} >> ${{ matrix.batch }}/version.txt
+              echo Antares_Simulator ${{ github.event.inputs.antares_tag }} >> ${{ matrix.batch }}/version.txt
               echo Antares_Simulator_Tests_NR ${{ github.event.inputs.antares_tests_tag }} >> ${{ matrix.batch }}/version.txt
               echo SimTest ${{ github.event.inputs.release_tag }} >> ${{ matrix.batch }}/version.txt
 
