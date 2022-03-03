@@ -126,6 +126,13 @@ jobs:
             python3 scripts/generate_reference.py ${{ matrix.batch }} rte-antares-${ANTARES_TAG/v/}-installer-64bits/bin
           shell: bash
 
+        - name: Write tags to file
+          shell: bash
+          run: |
+              echo Antares_Simulator $${{ github.event.inputs.antares_tag }} >> ${{ matrix.batch }}/version.txt
+              echo Antares_Simulator_Tests_NR ${{ github.event.inputs.antares_tests_tag }} >> ${{ matrix.batch }}/version.txt
+              echo SimTest ${{ github.event.inputs.release_tag }} >> ${{ matrix.batch }}/version.txt
+
         - name: zip results
           run: zip -q -r results.zip ${{ matrix.batch }}
 
@@ -136,5 +143,5 @@ jobs:
           with:
             upload_url: ${{ needs.release.outputs.url }}
             asset_path: results.zip
-            asset_name: ${{ matrix.batch }}-${{ github.event.inputs.antares_tag }}-${{ github.event.inputs.antares_tests_tag }}-${{ matrix.os }}.zip
+            asset_name: ${{ matrix.batch }}-${{ matrix.os }}.zip
             asset_content_type: application/octet-stream
