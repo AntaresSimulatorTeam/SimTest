@@ -65,12 +65,19 @@ jobs:
             asset_content_type: application/octet-stream
 
     generation:
-        runs-on: ${{ matrix.os }}
+        runs-on: $ {{matrix.runner }}
+        container: ${{ matrix.os }}
         needs: [release, matrix]
         strategy:
           matrix:
             batch: ${{ fromJson(needs.matrix.outputs.batches) }}
-            os: [ubuntu-20.04, windows-2022]
+            include:
+              - os: windows-2022
+                runner: windows-latest
+              - os: ubuntu-20.04
+                runner: ubuntu-latest
+              - os: antaresrte/rte-antares:centos7-simulator
+                runner: ubuntu-latest
 
         steps:
         - name: Checkout SimTest
