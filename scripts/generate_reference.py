@@ -40,9 +40,7 @@ studies = antares_utils.list_studies(root)
 
 for study in studies:
     print(study.name + '...', end='')
-    named_mps_problems = False
-    if study.parent.name == 'valid-named-mps':
-        named_mps_problems= True
+    named_mps_problems = (study.parent.name == 'valid-named-mps')
 
     result = antares_utils.generate_reference_values(solver_path, study, False, "sirius", named_mps_problems)
 
