@@ -50,7 +50,7 @@ def remove_outputs(study_path):
     for f in files:
         shutil.rmtree(f)
 
-def launch_solver(solver_path, study_path, use_ortools = False, ortools_solver = "sirius"):
+def launch_solver(solver_path, study_path, use_ortools = False, ortools_solver = "sirius", named_mps_problems = False):
     # Clean study output
     remove_outputs(study_path)
 
@@ -60,16 +60,19 @@ def launch_solver(solver_path, study_path, use_ortools = False, ortools_solver =
     if use_ortools:
         command.append('--use-ortools')
         command.append('--ortools-solver='+ortools_solver)
+    if named_mps_problems:
+        command.append('--named-mps-problems')
+
     process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=None)
     output = process.communicate()
 
     return "Solver returned error" not in output[0].decode('iso-8859-1')
 
-def generate_reference_values(solver_path, path, use_ortools, ortools_solver):
+def generate_reference_values(solver_path, path, use_ortools, ortools_solver, named_mps_problems):
 
     enable_study_output(path, True)
 
-    result = launch_solver(solver_path,path, use_ortools, ortools_solver)
+    result = launch_solver(solver_path,path, use_ortools, ortools_solver, named_mps_problems)
 
     output_path = path / 'output'
     list_dir = list_directories(output_path)
