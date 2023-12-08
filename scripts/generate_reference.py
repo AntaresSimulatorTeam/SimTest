@@ -38,10 +38,21 @@ print(f"Found solver {solver_path}")
 
 studies = antares_utils.list_studies(root)
 
+def solver_config(study_name):
+    if study_name == "valid-milp":
+        return ("coin", True)
+    else:
+        return ("sirius", False)
+
 for study in studies:
     print(study.name + '...', end='')
-    named_mps_problems = (study.parent.name == 'valid-named-mps')
 
-    result = antares_utils.generate_reference_values(solver_path, study, False, "sirius", named_mps_problems)
+    # Do we need named MPS problems ?
+    named_mps_problems = (study.parent.name == 'valid-named-mps')
+    # What optimization solver to use ?
+    (opt_solver, use_ortools) = solver_config(study.parent.name)
+
+    result = antares_utils.generate_reference_values(solver_path, study, use_ortools, opt_solver, named_mps_problems)
+
 
     print('OK' if result else 'KO')
