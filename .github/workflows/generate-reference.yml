@@ -68,6 +68,7 @@ jobs:
         runs-on: ${{ matrix.os }}
         needs: [release, matrix]
         strategy:
+          fail-fast: false
           matrix:
             batch: ${{ fromJson(needs.matrix.outputs.batches) }}
             os: [ubuntu-20.04, windows-2022]
