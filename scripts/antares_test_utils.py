@@ -64,9 +64,10 @@ def launch_solver(solver_path, study_path, use_ortools = False, ortools_solver =
         command.append('--named-mps-problems')
 
     process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=None)
-    output = process.communicate()
+    stdout, stderr = subprocess.communicate()
+    exit_code = subprocess.wait()
 
-    return "Solver returned error" not in output[0].decode('iso-8859-1')
+    return (exit_code == 0)
 
 def generate_reference_values(solver_path, path, use_ortools, ortools_solver, named_mps_problems):
 
