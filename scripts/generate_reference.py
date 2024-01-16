@@ -56,4 +56,6 @@ for study in studies:
     result = antares_utils.generate_reference_values(solver_path, study, use_ortools, opt_solver, named_mps_problems)
     ret.append(result)
 
+
+    print('OK' if result else 'KO')
 sys.exit(all(ret))
