@@ -64,8 +64,8 @@ def launch_solver(solver_path, study_path, use_ortools = False, ortools_solver =
         command.append('--named-mps-problems')
 
     process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=None)
-    stdout, stderr = subprocess.communicate()
-    exit_code = subprocess.wait()
+    stdout, stderr = process.communicate()
+    exit_code = process.wait()
 
     return (exit_code == 0)
 
