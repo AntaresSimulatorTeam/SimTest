@@ -44,6 +44,7 @@ def solver_config(study_name):
     else:
         return ("sirius", False)
 
+ret = []
 for study in studies:
     print(study.name + '...', end='')
 
@@ -53,6 +54,6 @@ for study in studies:
     (opt_solver, use_ortools) = solver_config(study.parent.name)
 
     result = antares_utils.generate_reference_values(solver_path, study, use_ortools, opt_solver, named_mps_problems)
+    ret.append(result)
 
-
-    print('OK' if result else 'KO')
+sys.exit(all(ret))
