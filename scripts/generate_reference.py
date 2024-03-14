@@ -1,6 +1,6 @@
 import argparse
 from pathlib import Path
-import re
+
 import antares_test_utils as antares_utils
 import sys
 
@@ -27,7 +27,7 @@ def find_solver(solver):
     if solver_path.is_dir():
         results = []
         for x in solver_path.iterdir():
-            if x.is_file() and re.match(f"^antares-[0-9]+\.[0-9]+-solver{suffix}$", x.name):
+            if x.is_file() and (f"antares-solver{suffix}" == x.name):
                 results.append(x)
         assert(len(results) == 1)
         return results[0].resolve()
