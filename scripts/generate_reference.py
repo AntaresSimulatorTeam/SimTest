@@ -33,8 +33,29 @@ def find_solver(solver):
         return results[0].resolve()
     raise RuntimeError("Missing solver")
 
+def find_tsgenerator(tsgenerator):
+    if sys.platform.startswith("win"):
+        suffix=".exe"
+    else:
+        suffix=""
+
+    tsgenerator_path = Path(tsgenerator)
+    if tsgenerator_path.is_file():
+        return tsgenerator.resolve()
+    if tsgenerator_path.is_dir():
+        results = []
+        for x in tsgenerator_path.iterdir():
+            if x.is_file() and (f"antares-ts-generator{suffix}" == x.name):
+                results.append(x)
+        assert(len(results) == 1)
+        return results[0].resolve()
+    raise RuntimeError("Missing ts-generator")
+
 solver_path = find_solver(args.solver)
 print(f"Found solver {solver_path}")
+
+tsgenerator_path = find_tsgenerator(args.solver)
+print(f"Found ts-generator {tsgenerator_path}")
 
 studies = antares_utils.list_studies(root)
 
@@ -50,10 +71,12 @@ for study in studies:
 
     # Do we need named MPS problems ?
     named_mps_problems = (study.parent.name == 'valid-named-mps')
+    # Are we testing the time series generator ?
+    ts_generator = (study.parent.name == 'ts-generator')
     # What optimization solver to use ?
     (opt_solver, use_ortools) = solver_config(study.parent.name)
 
-    result = antares_utils.generate_reference_values(solver_path, study, use_ortools, opt_solver, named_mps_problems)
+    result = antares_utils.generate_reference_values(solver_path, study, use_ortools, opt_solver, named_mps_problems, ts_generator)
     ret.append(result)
     print('OK' if result else 'KO')
 
