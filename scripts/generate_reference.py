@@ -37,8 +37,8 @@ def find_binary(path, binary_name):
 solver_path = find_binary(args.solver, "solver")
 print(f"Found solver {solver_path}")
 
-tsgenerator_path = find_binary(args.solver, "ts-generator")
-print(f"Found ts-generator {tsgenerator_path}")
+ts_generator_path = find_binary(args.solver, "ts-generator")
+print(f"Found ts-generator {ts_generator_path}")
 
 studies = antares_utils.list_studies(root)
 
@@ -55,11 +55,12 @@ for study in studies:
     # Do we need named MPS problems ?
     named_mps_problems = (study.parent.name == 'valid-named-mps')
     # Are we testing the time series generator ?
-    ts_generator = (study.parent.name == 'ts-generator')
+    if study.parent.name != 'ts-generator':
+        ts_generator_path = ""
     # What optimization solver to use ?
     (opt_solver, use_ortools) = solver_config(study.parent.name)
 
-    result = antares_utils.generate_reference_values(solver_path, study, use_ortools, opt_solver, named_mps_problems, ts_generator)
+    result = antares_utils.generate_reference_values(solver_path, study, use_ortools, opt_solver, named_mps_problems, ts_generator_path)
     ret.append(result)
     print('OK' if result else 'KO')
 
