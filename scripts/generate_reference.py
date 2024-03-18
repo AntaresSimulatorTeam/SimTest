@@ -15,46 +15,29 @@ args = parser.parse_args()
 root = Path(args.root).resolve()
 solver_path = Path(args.solver).resolve()
 
-def find_solver(solver):
+def find_binary(path, binary_name):
     if sys.platform.startswith("win"):
         suffix=".exe"
     else:
         suffix=""
 
-    solver_path = Path(solver)
-    if solver_path.is_file():
-        return solver.resolve()
-    if solver_path.is_dir():
+    binary_path = Path(path)
+    if binary_path.is_file():
+        return path.resolve()
+    if binary_path.is_dir():
         results = []
-        for x in solver_path.iterdir():
-            if x.is_file() and (f"antares-solver{suffix}" == x.name):
+        for x in binary_path.iterdir():
+            if x.is_file() and (f"antares-{binary_name}{suffix}" == x.name):
                 results.append(x)
         assert(len(results) == 1)
         return results[0].resolve()
-    raise RuntimeError("Missing solver")
+    raise RuntimeError("Missing {binary_name}")
 
-def find_tsgenerator(tsgenerator):
-    if sys.platform.startswith("win"):
-        suffix=".exe"
-    else:
-        suffix=""
 
-    tsgenerator_path = Path(tsgenerator)
-    if tsgenerator_path.is_file():
-        return tsgenerator.resolve()
-    if tsgenerator_path.is_dir():
-        results = []
-        for x in tsgenerator_path.iterdir():
-            if x.is_file() and (f"antares-ts-generator{suffix}" == x.name):
-                results.append(x)
-        assert(len(results) == 1)
-        return results[0].resolve()
-    raise RuntimeError("Missing ts-generator")
-
-solver_path = find_solver(args.solver)
+solver_path = find_binary(args.solver, "solver")
 print(f"Found solver {solver_path}")
 
-tsgenerator_path = find_tsgenerator(args.solver)
+tsgenerator_path = find_binary(args.solver, "ts-generator")
 print(f"Found ts-generator {tsgenerator_path}")
 
 studies = antares_utils.list_studies(root)
