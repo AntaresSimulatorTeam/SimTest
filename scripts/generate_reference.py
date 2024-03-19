@@ -31,14 +31,14 @@ def solver_config(study_name):
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument("root", help="Directory containing studies",
+parser.add_argument("batch_directory", help="Directory containing studies",
                     type=str)
 
 parser.add_argument("solver", help="Path to antares-solver",
                     type=str)
 
 args = parser.parse_args()
-root = Path(args.root).resolve()
+batch_directory = Path(args.batch_directory).resolve()
 
 solver_path = Path(args.solver).resolve()
 solver_path = find_binary(args.solver, "solver")
@@ -47,7 +47,7 @@ print(f"Found solver {solver_path}")
 ts_generator_path = find_binary(args.solver, "ts-generator")
 print(f"Found ts-generator {ts_generator_path}")
 
-studies = antares_utils.list_studies(root)
+studies = antares_utils.list_studies(batch_directory)
 
 ret = []
 for study in studies:
