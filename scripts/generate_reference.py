@@ -4,17 +4,6 @@ from pathlib import Path
 import antares_test_utils as antares_utils
 import sys
 
-parser = argparse.ArgumentParser()
-parser.add_argument("root", help="Directory containing studies",
-                    type=str)
-
-parser.add_argument("solver", help="Path to antares-solver",
-                    type=str)
-
-args = parser.parse_args()
-root = Path(args.root).resolve()
-solver_path = Path(args.solver).resolve()
-
 def find_binary(path, binary_name):
     if sys.platform.startswith("win"):
         suffix=".exe"
@@ -34,6 +23,24 @@ def find_binary(path, binary_name):
     raise RuntimeError("Missing {binary_name}")
 
 
+def solver_config(study_name):
+    if study_name == "valid-milp":
+        return ("coin", True)
+    else:
+        return ("sirius", False)
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument("root", help="Directory containing studies",
+                    type=str)
+
+parser.add_argument("solver", help="Path to antares-solver",
+                    type=str)
+
+args = parser.parse_args()
+root = Path(args.root).resolve()
+
+solver_path = Path(args.solver).resolve()
 solver_path = find_binary(args.solver, "solver")
 print(f"Found solver {solver_path}")
 
@@ -41,12 +48,6 @@ ts_generator_path = find_binary(args.solver, "ts-generator")
 print(f"Found ts-generator {ts_generator_path}")
 
 studies = antares_utils.list_studies(root)
-
-def solver_config(study_name):
-    if study_name == "valid-milp":
-        return ("coin", True)
-    else:
-        return ("sirius", False)
 
 ret = []
 for study in studies:
