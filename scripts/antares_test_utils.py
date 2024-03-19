@@ -50,7 +50,7 @@ def remove_outputs(study_path):
     for f in files:
         shutil.rmtree(f)
 
-def launch_solver(solver_path, study_path, use_ortools = False, ortools_solver = "sirius", named_mps_problems = False):
+def launch_solver(solver_path, study_path, use_ortools = False, ortools_solver = "sirius", named_mps_problems = False, ts_generator_path = ""):
     # Clean study output
     remove_outputs(study_path)
 
@@ -62,6 +62,11 @@ def launch_solver(solver_path, study_path, use_ortools = False, ortools_solver =
         command.append('--ortools-solver='+ortools_solver)
     if named_mps_problems:
         command.append('--named-mps-problems')
+    if ts_generator_path != "":
+        cluster_to_gen_file = open(study_path / "clustersToGen.txt", 'r')
+        cluster_to_gen = cluster_to_gen_file.readline().rstrip() # remove new line char
+        cluster_to_gen_file.close()
+        command = [ts_generator_path, cluster_to_gen, str(study_path)]
 
     process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=None)
     stdout, stderr = process.communicate()
@@ -69,11 +74,11 @@ def launch_solver(solver_path, study_path, use_ortools = False, ortools_solver =
 
     return (exit_code == 0)
 
-def generate_reference_values(solver_path, path, use_ortools, ortools_solver, named_mps_problems):
+def generate_reference_values(solver_path, path, use_ortools, ortools_solver, named_mps_problems, ts_generator_path):
 
     enable_study_output(path, True)
 
-    result = launch_solver(solver_path,path, use_ortools, ortools_solver, named_mps_problems)
+    result = launch_solver(solver_path,path, use_ortools, ortools_solver, named_mps_problems, ts_generator_path)
 
     output_path = path / 'output'
     list_dir = list_directories(output_path)
