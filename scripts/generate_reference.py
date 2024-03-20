@@ -63,8 +63,9 @@ for study_path in study_patyh_collection:
     (opt_solver, use_ortools) = solver_config(study_path.parent.name)
 
     antares_utils.remove_possibly_remaining_outputs(study_path)
+    antares_utils.enable_study_output(study_path, True)
 
-    result = antares_utils.generate_reference_values(solver_path, study_path, use_ortools, opt_solver, named_mps_problems, ts_generator_path)
+    result = antares_utils.launch_solver(solver_path, study_path, use_ortools, opt_solver, named_mps_problems, ts_generator_path)
     ret.append(result)
     print('OK' if result else 'KO')
 

@@ -71,15 +71,6 @@ def launch_solver(solver_path, study_path, use_ortools = False, ortools_solver =
 
     return (exit_code == 0)
 
-def generate_reference_values(solver_path, study_path, use_ortools, ortools_solver, named_mps_problems, ts_generator_path):
-
-    enable_study_output(study_path, True)
-
-    result = launch_solver(solver_path, study_path, use_ortools, ortools_solver, named_mps_problems, ts_generator_path)
-
-    return result
-
-
 def move_output_to_reference(study_path):
     output_path = study_path / 'output'
     list_dir = list_directories(output_path)
