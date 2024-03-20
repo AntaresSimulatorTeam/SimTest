@@ -50,13 +50,27 @@ def remove_possibly_remaining_outputs(study_path):
     for f in files:
         shutil.rmtree(f)
 
-def launch_solver(solver_path, study_path, use_ortools = False, ortools_solver = "sirius", named_mps_problems = False, ts_generator_path = ""):
+def solver_config(study_name):
+    if study_name == "valid-milp":
+        return ("coin", True)
+    else:
+        return ("sirius", False)
+
+def launch_solver(solver_path, study_path, ts_generator_path):
+    # Do we need named MPS problems ?
+    named_mps_problems = (study_path.parent.name == 'valid-named-mps')
+
+    # Are we testing the time series generator ?
+    if study_path.parent.name != 'ts-generator':
+        ts_generator_path = ""
+
+    (opt_solver, use_ortools) = solver_config(study_path.parent.name)
     solver_path_full = str(Path(solver_path).resolve())
 
     command = [solver_path_full, "-i", str(study_path)]
     if use_ortools:
         command.append('--use-ortools')
-        command.append('--ortools-solver='+ortools_solver)
+        command.append('--ortools-solver='+opt_solver)
     if named_mps_problems:
         command.append('--named-mps-problems')
     if ts_generator_path != "":
