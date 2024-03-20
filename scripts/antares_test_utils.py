@@ -80,15 +80,17 @@ def generate_reference_values(solver_path, study_path, use_ortools, ortools_solv
 
     result = launch_solver(solver_path,study_path, use_ortools, ortools_solver, named_mps_problems, ts_generator_path)
 
+    return result
+
+
+def move_output_to_reference(study_path):
     output_path = study_path / 'output'
     list_dir = list_directories(output_path)
     assert len(list_dir) == 1
-
     result_dir = list_dir[0]
-
     reference_path = study_path / 'output' / 'reference'
     shutil.move(result_dir, reference_path)
-    return result
+
 
 def enable_study_output(study_path, enable):
     st = Study(study_path)

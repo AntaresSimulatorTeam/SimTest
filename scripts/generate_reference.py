@@ -41,6 +41,7 @@ args = parser.parse_args()
 batch_directory = Path(args.batch_directory).resolve()
 
 solver_path = Path(args.solver).resolve()
+
 solver_path = find_binary(args.solver, "solver")
 print(f"Found solver {solver_path}")
 
@@ -64,5 +65,7 @@ for study_path in study_patyh_collection:
     result = antares_utils.generate_reference_values(solver_path, study_path, use_ortools, opt_solver, named_mps_problems, ts_generator_path)
     ret.append(result)
     print('OK' if result else 'KO')
+
+    antares_utils.move_output_to_reference(study_path)
 
 sys.exit(not all(ret))
