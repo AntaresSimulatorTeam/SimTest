@@ -74,19 +74,19 @@ def launch_solver(solver_path, study_path, use_ortools = False, ortools_solver =
 
     return (exit_code == 0)
 
-def generate_reference_values(solver_path, path, use_ortools, ortools_solver, named_mps_problems, ts_generator_path):
+def generate_reference_values(solver_path, study_path, use_ortools, ortools_solver, named_mps_problems, ts_generator_path):
 
-    enable_study_output(path, True)
+    enable_study_output(study_path, True)
 
-    result = launch_solver(solver_path,path, use_ortools, ortools_solver, named_mps_problems, ts_generator_path)
+    result = launch_solver(solver_path,study_path, use_ortools, ortools_solver, named_mps_problems, ts_generator_path)
 
-    output_path = path / 'output'
+    output_path = study_path / 'output'
     list_dir = list_directories(output_path)
     assert len(list_dir) == 1
 
     result_dir = list_dir[0]
 
-    reference_path = path / 'output' / 'reference'
+    reference_path = study_path / 'output' / 'reference'
     shutil.move(result_dir, reference_path)
     return result
 

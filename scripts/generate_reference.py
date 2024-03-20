@@ -47,21 +47,21 @@ print(f"Found solver {solver_path}")
 ts_generator_path = find_binary(args.solver, "ts-generator")
 print(f"Found ts-generator {ts_generator_path}")
 
-studies = antares_utils.list_studies(batch_directory)
+study_patyh_collection = antares_utils.list_studies(batch_directory)
 
 ret = []
-for study in studies:
-    print(study.name + '...', end='')
+for study_path in study_patyh_collection:
+    print(study_path.name + '...', end='')
 
     # Do we need named MPS problems ?
-    named_mps_problems = (study.parent.name == 'valid-named-mps')
+    named_mps_problems = (study_path.parent.name == 'valid-named-mps')
     # Are we testing the time series generator ?
-    if study.parent.name != 'ts-generator':
+    if study_path.parent.name != 'ts-generator':
         ts_generator_path = ""
     # What optimization solver to use ?
-    (opt_solver, use_ortools) = solver_config(study.parent.name)
+    (opt_solver, use_ortools) = solver_config(study_path.parent.name)
 
-    result = antares_utils.generate_reference_values(solver_path, study, use_ortools, opt_solver, named_mps_problems, ts_generator_path)
+    result = antares_utils.generate_reference_values(solver_path, study_path, use_ortools, opt_solver, named_mps_problems, ts_generator_path)
     ret.append(result)
     print('OK' if result else 'KO')
 
