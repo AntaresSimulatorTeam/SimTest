@@ -44,16 +44,13 @@ def find_output_result_dir(output_dir):
 def get_headers(df) -> set :
     return set(df.columns)
 
-def remove_outputs(study_path):
+def remove_possibly_remaining_outputs(study_path):
     output_path = study_path / 'output'
     files = glob.glob(str(output_path))
     for f in files:
         shutil.rmtree(f)
 
 def launch_solver(solver_path, study_path, use_ortools = False, ortools_solver = "sirius", named_mps_problems = False, ts_generator_path = ""):
-    # Clean study output
-    remove_outputs(study_path)
-
     solver_path_full = str(Path(solver_path).resolve())
 
     command = [solver_path_full, "-i", str(study_path)]
@@ -78,7 +75,7 @@ def generate_reference_values(solver_path, study_path, use_ortools, ortools_solv
 
     enable_study_output(study_path, True)
 
-    result = launch_solver(solver_path,study_path, use_ortools, ortools_solver, named_mps_problems, ts_generator_path)
+    result = launch_solver(solver_path, study_path, use_ortools, ortools_solver, named_mps_problems, ts_generator_path)
 
     return result
 
