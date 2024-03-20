@@ -22,6 +22,35 @@ def find_binary(path, binary_name):
         return results[0].resolve()
     raise RuntimeError("Missing {binary_name}")
 
+def solver_config(study_name):
+    if study_name == "valid-milp":
+        return ("coin", True)
+    else:
+        return ("sirius", False)
+
+def make_command(solver_path, study_path, ts_generator_path):
+    # Do we need named MPS problems ?
+    named_mps_problems = (study_path.parent.name == 'valid-named-mps')
+
+    # Are we testing the time series generator ?
+    if study_path.parent.name != 'ts-generator':
+        ts_generator_path = ""
+
+    (opt_solver, use_ortools) = solver_config(study_path.parent.name)
+    solver_path_full = str(Path(solver_path).resolve())
+
+    command = [solver_path_full, "-i", str(study_path)]
+    if use_ortools:
+        command.append('--use-ortools')
+        command.append('--ortools-solver=' + opt_solver)
+    if named_mps_problems:
+        command.append('--named-mps-problems')
+    if ts_generator_path != "":
+        cluster_to_gen_file = open(study_path / "clustersToGen.txt", 'r')
+        cluster_to_gen = cluster_to_gen_file.readline().rstrip()  # remove new line char
+        cluster_to_gen_file.close()
+        command = [ts_generator_path, cluster_to_gen, str(study_path)]
+    return command
 
 parser = argparse.ArgumentParser()
 parser.add_argument("batch_directory", help="Directory containing studies",
@@ -50,7 +79,8 @@ for study_path in study_patyh_collection:
     antares_utils.remove_possibly_remaining_outputs(study_path)
     antares_utils.enable_study_output(study_path, True)
 
-    result = antares_utils.launch_solver(solver_path, study_path, ts_generator_path)
+    command = make_command(solver_path, study_path, ts_generator_path)
+    result = antares_utils.run_command(command)
     ret.append(result)
     print('OK' if result else 'KO')
 

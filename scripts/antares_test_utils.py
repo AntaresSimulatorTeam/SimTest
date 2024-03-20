@@ -50,39 +50,10 @@ def remove_possibly_remaining_outputs(study_path):
     for f in files:
         shutil.rmtree(f)
 
-def solver_config(study_name):
-    if study_name == "valid-milp":
-        return ("coin", True)
-    else:
-        return ("sirius", False)
-
-def launch_solver(solver_path, study_path, ts_generator_path):
-    # Do we need named MPS problems ?
-    named_mps_problems = (study_path.parent.name == 'valid-named-mps')
-
-    # Are we testing the time series generator ?
-    if study_path.parent.name != 'ts-generator':
-        ts_generator_path = ""
-
-    (opt_solver, use_ortools) = solver_config(study_path.parent.name)
-    solver_path_full = str(Path(solver_path).resolve())
-
-    command = [solver_path_full, "-i", str(study_path)]
-    if use_ortools:
-        command.append('--use-ortools')
-        command.append('--ortools-solver='+opt_solver)
-    if named_mps_problems:
-        command.append('--named-mps-problems')
-    if ts_generator_path != "":
-        cluster_to_gen_file = open(study_path / "clustersToGen.txt", 'r')
-        cluster_to_gen = cluster_to_gen_file.readline().rstrip() # remove new line char
-        cluster_to_gen_file.close()
-        command = [ts_generator_path, cluster_to_gen, str(study_path)]
-
+def run_command(command):
     process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=None)
-    stdout, stderr = process.communicate()
+    process.communicate()
     exit_code = process.wait()
-
     return (exit_code == 0)
 
 def move_output_to_reference(study_path):
