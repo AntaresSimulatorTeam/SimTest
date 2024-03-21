@@ -31,9 +31,7 @@ def get_headers(df) -> set :
 
 def remove_possibly_remaining_outputs(study_path):
     output_path = study_path / 'output'
-    files = glob.glob(str(output_path))
-    for f in files:
-        shutil.rmtree(f)
+    shutil.rmtree(output_path, ignore_errors=True)
 
 def move_output_to_reference(study_path):
     output_path = study_path / 'output'
