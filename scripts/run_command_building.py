@@ -7,13 +7,10 @@ def find_exe_path(path_to_serach_exe_in, exe_identifier):
     if sys.platform.startswith("win"):
         searched_exe += ".exe"
 
-    if path_to_serach_exe_in.is_file():
-        return path_to_serach_exe_in.resolve()
-    if path_to_serach_exe_in.is_dir():
-        for path_item in path_to_serach_exe_in.iterdir():
-            if path_item.is_file() and (path_item.name == searched_exe):
-                return path_item.resolve()
-    raise RuntimeError("Missing {binary_name}")
+    for path_item in path_to_serach_exe_in.iterdir():
+        if path_item.is_file() and (path_item.name == searched_exe):
+            return path_item.resolve()
+    raise RuntimeError("Missing {searched_exe}")
 
 def make_command_to_run(path_where_to_find_exe, batch_name, study_path):
     command_to_run = []
