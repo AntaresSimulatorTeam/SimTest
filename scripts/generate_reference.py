@@ -6,7 +6,7 @@ import sys
 
 # Parsing args
 parser = argparse.ArgumentParser()
-parser.add_argument("batch_name", help="Btch directory (containing studies)",
+parser.add_argument("batch_name", help="Batch directory (containing studies)",
                     type=str)
 parser.add_argument("path_where_to_find_exe", help="Path to binary to exe",
                     type=str)
