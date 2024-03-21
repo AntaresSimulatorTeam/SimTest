@@ -4,7 +4,7 @@ import sys
 def find_binary(path, batch_name):
     exe_identifier = "solver"
     if batch_name == "ts-generator":
-        exe_identifier = batch_name
+        exe_identifier = "ts-generator"
 
     if sys.platform.startswith("win"):
         suffix=".exe"
@@ -17,10 +17,6 @@ def find_binary(path, batch_name):
     if binary_path.is_dir():
         results = []
         for path_item in binary_path.iterdir():
-            # print(f"antares-{exe_identifier}{suffix}")
-            # print("-")
-            # print(path_item.name)
-            # print("---")
             if path_item.is_file() and (f"antares-{exe_identifier}{suffix}" == path_item.name):
                 results.append(path_item)
         assert(len(results) == 1)
