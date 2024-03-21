@@ -20,12 +20,6 @@ def find_binary(path, exe_identifier):
         return results[0].resolve()
     raise RuntimeError("Missing {binary_name}")
 
-def solver_config(batch_name):
-    if batch_name == "valid-milp":
-        return ("coin", True)
-    else:
-        return ("sirius", False)
-
 def make_command_to_run(path_where_to_find_exe, batch_name, study_path):
     command_to_run = []
     exe_path = Path()
@@ -45,16 +39,13 @@ def make_command_to_run(path_where_to_find_exe, batch_name, study_path):
         exe_path = find_binary(path_where_to_find_exe, exe_identifier)
         print(f"Found executabled : {exe_path}")
 
-        (opt_solver, use_ortools) = solver_config(batch_name)
-
         command_to_run = [exe_path, "-i", str(study_path)]
-
-        if use_ortools:
+        if batch_name == "valid-milp":
             command_to_run.append('--use-ortools')
-            command_to_run.append('--ortools-solver=' + opt_solver)
+            command_to_run.append('--ortools-solver=coin')
+
         if batch_name == "valid-named-mps":
             command_to_run.append('--named-mps-problems')
-
 
     return command_to_run
 
