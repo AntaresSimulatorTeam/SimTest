@@ -15,6 +15,10 @@ args = parser.parse_args()
 batch_name = args.batch_name
 path_where_to_find_exe = Path(args.path_where_to_find_exe)
 
+if not path_where_to_find_exe.is_dir() and not path_where_to_find_exe.is_file():
+    raise RuntimeError("Path where to find an executable does not exist")
+
+
 # Looking for studies in batch directory
 study_path_collection = antares_utils.find_studies_in_batch_dir(batch_name)
 

@@ -2,12 +2,14 @@ from pathlib import Path
 import subprocess
 import sys
 
-def find_exe_path(path_to_serach_exe_in, exe_identifier):
+def find_exe_path(path_to_search_exe_in, exe_identifier):
     searched_exe = f"antares-{exe_identifier}"
     if sys.platform.startswith("win"):
         searched_exe += ".exe"
 
-    for path_item in path_to_serach_exe_in.iterdir():
+    if path_to_search_exe_in.is_file() and path_to_search_exe_in.name == searched_exe:
+        return path_to_search_exe_in.resolve()
+    for path_item in path_to_search_exe_in.iterdir():
         if path_item.is_file() and (path_item.name == searched_exe):
             return path_item.resolve()
     raise RuntimeError("Missing {searched_exe}")
