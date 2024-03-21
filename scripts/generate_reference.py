@@ -8,12 +8,12 @@ import sys
 parser = argparse.ArgumentParser()
 parser.add_argument("batch_name", help="Batch directory (containing studies)",
                     type=str)
-parser.add_argument("path_where_to_find_exe", help="Path to binary to exe",
+parser.add_argument("path_where_to_find_exe", help="Path to executable",
                     type=str)
 #  Storing args
 args = parser.parse_args()
 batch_name = args.batch_name
-path_where_to_find_exe = args.path_where_to_find_exe
+path_where_to_find_exe = Path(args.path_where_to_find_exe)
 
 # Looking for studies in batch directory
 study_path_collection = antares_utils.find_studies_in_batch_dir(batch_name)
