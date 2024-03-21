@@ -1,7 +1,6 @@
 from pathlib import Path
 import glob
 import shutil
-import subprocess
 
 from study import Study
 
@@ -14,16 +13,17 @@ def list_directories(directory):
             dir_list.append(x)
     return dir_list
 
-def list_studies(directory):
+def find_studies_in_batch_dir(batch_name):
+    batch_directory = Path(batch_name).resolve()
     studies = []
-    dir_path = Path(directory)
+    dir_path = Path(batch_directory)
     if (dir_path.is_dir()):
         study = Study(dir_path)
         if study.check_files_existence():
-            studies.append(directory)
+            studies.append(batch_directory)
         else:
             for x in dir_path.iterdir():
-                studies.extend(list_studies(x))
+                studies.extend(find_studies_in_batch_dir(x))
 
     return studies
 
@@ -49,12 +49,6 @@ def remove_possibly_remaining_outputs(study_path):
     files = glob.glob(str(output_path))
     for f in files:
         shutil.rmtree(f)
-
-def run_command(command):
-    process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=None)
-    process.communicate()
-    exit_code = process.wait()
-    return (exit_code == 0)
 
 def move_output_to_reference(study_path):
     output_path = study_path / 'output'

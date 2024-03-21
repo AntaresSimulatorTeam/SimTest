@@ -1,11 +1,8 @@
 from pathlib import Path
+import subprocess
 import sys
 
-def find_binary(path, batch_name):
-    exe_identifier = "solver"
-    if batch_name == "ts-generator":
-        exe_identifier = "ts-generator"
-
+def find_binary(path, exe_identifier):
     if sys.platform.startswith("win"):
         suffix=".exe"
     else:
@@ -29,25 +26,40 @@ def solver_config(study_name):
     else:
         return ("sirius", False)
 
-def make_command_to_run(exe_path, study_path):
+def make_command_to_run(path_where_to_find_exe, batch_name, study_path):
+    command_to_run = []
+    exe_path = Path()
+    exe_identifier = "solver" # Default value
 
-    if "ts-generator" in exe_path.name:
+    if batch_name == "ts-generator":
+        exe_identifier = "ts-generator"
+        exe_path = find_binary(path_where_to_find_exe, exe_identifier)
+        print(f"Found executabled : {exe_path}")
+
         cluster_to_gen_file = open(study_path / "clustersToGen.txt", 'r')
-        cluster_to_gen = cluster_to_gen_file.readline().rstrip()  # remove new line char
+        cluster_to_gen = cluster_to_gen_file.readline().rstrip()
         cluster_to_gen_file.close()
-        command = [exe_path, cluster_to_gen, str(study_path)]
+        command_to_run = [exe_path, cluster_to_gen, str(study_path)]
+
     else:
-        # Do we need named MPS problems ?
-        named_mps_problems = (study_path.parent.name == 'valid-named-mps')
+        exe_path = find_binary(path_where_to_find_exe, exe_identifier)
+        print(f"Found executabled : {exe_path}")
 
         (opt_solver, use_ortools) = solver_config(study_path.parent.name)
         solver_path_full = str(Path(exe_path).resolve())
 
-        command = [solver_path_full, "-i", str(study_path)]
+        command_to_run = [solver_path_full, "-i", str(study_path)]
         if use_ortools:
-            command.append('--use-ortools')
-            command.append('--ortools-solver=' + opt_solver)
-        if named_mps_problems:
-            command.append('--named-mps-problems')
+            command_to_run.append('--use-ortools')
+            command_to_run.append('--ortools-solver=' + opt_solver)
+        if batch_name == "valid-named-mps":
+            command_to_run.append('--named-mps-problems')
 
-    return command
+
+    return command_to_run
+
+def run_command(command):
+    process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=None)
+    process.communicate()
+    exit_code = process.wait()
+    return (exit_code == 0)
