@@ -16,13 +16,12 @@ def list_directories(directory):
 def find_studies_in_batch_dir(batch_name):
     batch_directory = Path(batch_name).resolve()
     studies = []
-    dir_path = Path(batch_directory)
-    if (dir_path.is_dir()):
-        study = Study(dir_path)
+    if (batch_directory.is_dir()):
+        study = Study(batch_directory)
         if study.check_files_existence():
             studies.append(batch_directory)
         else:
-            for x in dir_path.iterdir():
+            for x in batch_directory.iterdir():
                 studies.extend(find_studies_in_batch_dir(x))
 
     return studies
