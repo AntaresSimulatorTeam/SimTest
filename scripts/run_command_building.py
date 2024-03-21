@@ -46,9 +46,9 @@ def make_command_to_run(path_where_to_find_exe, batch_name, study_path):
         print(f"Found executabled : {exe_path}")
 
         (opt_solver, use_ortools) = solver_config(batch_name)
-        solver_path_full = str(Path(exe_path).resolve())
 
-        command_to_run = [solver_path_full, "-i", str(study_path)]
+        command_to_run = [exe_path, "-i", str(study_path)]
+
         if use_ortools:
             command_to_run.append('--use-ortools')
             command_to_run.append('--ortools-solver=' + opt_solver)
