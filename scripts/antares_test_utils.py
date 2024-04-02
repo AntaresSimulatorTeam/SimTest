@@ -1,7 +1,6 @@
 from pathlib import Path
 import glob
 import shutil
-import subprocess
 
 from study import Study
 
@@ -14,81 +13,35 @@ def list_directories(directory):
             dir_list.append(x)
     return dir_list
 
-def list_studies(directory):
+def find_studies_in_batch_dir(batch_name):
+    batch_directory = Path(batch_name).resolve()
     studies = []
-    dir_path = Path(directory)
-    if (dir_path.is_dir()):
-        study = Study(dir_path)
+    if (batch_directory.is_dir()):
+        study = Study(batch_directory)
         if study.check_files_existence():
-            studies.append(directory)
+            studies.append(batch_directory)
         else:
-            for x in dir_path.iterdir():
-                studies.extend(list_studies(x))
+            for x in batch_directory.iterdir():
+                studies.extend(find_studies_in_batch_dir(x))
 
     return studies
-
-def find_output_result_dir(output_dir):
-    list_output_dir = list_directories(output_dir)
-    assert len(list_output_dir) == 1
-
-    list_dir = list_directories(list_output_dir[0])
-
-    dir_list = []
-    for x in list_dir:
-        dir_path = Path(x)
-        if dir_path.is_dir() and (dir_path.name in ["adequacy", "economy", "adequacy-draft"]):
-            dir_list.append(x)
-    assert len(dir_list) == 1
-    return dir_list[0]
 
 def get_headers(df) -> set :
     return set(df.columns)
 
-def remove_outputs(study_path):
+def remove_possibly_remaining_outputs(study_path):
     output_path = study_path / 'output'
-    files = glob.glob(str(output_path))
-    for f in files:
-        shutil.rmtree(f)
+    shutil.rmtree(output_path, ignore_errors=True)
 
-def launch_solver(solver_path, study_path, use_ortools = False, ortools_solver = "sirius", named_mps_problems = False, ts_generator_path = ""):
-    # Clean study output
-    remove_outputs(study_path)
-
-    solver_path_full = str(Path(solver_path).resolve())
-
-    command = [solver_path_full, "-i", str(study_path)]
-    if use_ortools:
-        command.append('--use-ortools')
-        command.append('--ortools-solver='+ortools_solver)
-    if named_mps_problems:
-        command.append('--named-mps-problems')
-    if ts_generator_path != "":
-        cluster_to_gen_file = open(study_path / "clustersToGen.txt", 'r')
-        cluster_to_gen = cluster_to_gen_file.readline().rstrip() # remove new line char
-        cluster_to_gen_file.close()
-        command = [ts_generator_path, cluster_to_gen, str(study_path)]
-
-    process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=None)
-    stdout, stderr = process.communicate()
-    exit_code = process.wait()
-
-    return (exit_code == 0)
-
-def generate_reference_values(solver_path, path, use_ortools, ortools_solver, named_mps_problems, ts_generator_path):
-
-    enable_study_output(path, True)
-
-    result = launch_solver(solver_path,path, use_ortools, ortools_solver, named_mps_problems, ts_generator_path)
-
-    output_path = path / 'output'
-    list_dir = list_directories(output_path)
-    assert len(list_dir) == 1
-
+def move_output_to_reference(study_path):
+    output_path = study_path / 'output'
+    list_dir = list_directories(output_path) # list of 'output' sub-directories
+    if len(list_dir) != 1 : # We should have only 1 results directory
+        raise AssertionError("Too many results directories in output")
     result_dir = list_dir[0]
-
-    reference_path = path / 'output' / 'reference'
+    reference_path = study_path / 'output' / 'reference'
     shutil.move(result_dir, reference_path)
-    return result
+
 
 def enable_study_output(study_path, enable):
     st = Study(study_path)
