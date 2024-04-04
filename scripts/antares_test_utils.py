@@ -26,9 +26,6 @@ def find_studies_in_batch_dir(batch_name):
 
     return studies
 
-def get_headers(df) -> set :
-    return set(df.columns)
-
 def remove_possibly_remaining_outputs(study_path):
     output_path = study_path / 'output'
     shutil.rmtree(output_path, ignore_errors=True)
