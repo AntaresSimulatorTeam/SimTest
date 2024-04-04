@@ -23,13 +23,11 @@ def find_exe_path(path_to_search_exe_in, exe_identifier):
 def make_command_to_run(exe_path, batch_name, study_path):
     command_to_run = []
     if batch_name == "ts-generator":
-        print(f"Found executabled : {exe_path}")
         cluster_to_gen_file = open(study_path / "clustersToGen.txt", 'r')
         cluster_to_gen = cluster_to_gen_file.readline().rstrip()
         cluster_to_gen_file.close()
         command_to_run = [exe_path, cluster_to_gen, str(study_path)]
     else:
-        print(f"Found executabled : {exe_path}")
         command_to_run = [exe_path, "-i", str(study_path)]
         if batch_name == "valid-milp":
             command_to_run.append('--use-ortools')

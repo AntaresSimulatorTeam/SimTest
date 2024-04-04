@@ -20,6 +20,7 @@ if not path_where_to_find_exe.is_dir() and not path_where_to_find_exe.is_file():
     raise RuntimeError("Path where to find an executable does not exist")
 exe_identifier = exe_id_from_batch_name(batch_name)
 exe_path = find_exe_path(path_where_to_find_exe, exe_identifier)
+print(f"Found executabled : {exe_path}")
 
 # Looking for studies in batch directory
 study_path_collection = antares_utils.find_studies_in_batch_dir(batch_name)
