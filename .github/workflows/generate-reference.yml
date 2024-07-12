@@ -52,7 +52,7 @@ jobs:
           id: read_batches
           run: |
             BATCHES=$(printf "\"%s\"," $(cat study-batches.txt) | sed "s/^/[/;s/,$/]/")
-            echo "batches::$BATCHES" >> $GITHUB_ENV
+            echo "batches::$BATCHES" >> $GITHUB_OUTPUT
 
         - name: Upload study-batches.txt
           uses: actions/upload-release-asset@v1
@@ -70,7 +70,7 @@ jobs:
         strategy:
           fail-fast: false
           matrix:
-            batch: ${{ env.batches }}
+            batch: ${{ fromJson(needs.matrix.outputs.batches) }}
             os: [ubuntu-20.04, windows-2022]
 
         steps:
