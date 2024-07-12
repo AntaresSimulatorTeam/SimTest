@@ -70,7 +70,7 @@ jobs:
         strategy:
           fail-fast: false
           matrix:
-            batch: ${{ fromJson($env.batches) }}
+            batch: ${{ env.batches }}
             os: [ubuntu-20.04, windows-2022]
 
         steps:
