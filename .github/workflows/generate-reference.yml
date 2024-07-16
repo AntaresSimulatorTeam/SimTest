@@ -44,6 +44,9 @@ jobs:
         batches: ${{ steps.read_batches.outputs.batches }}
 
       steps:
+        - name: Checkout SimTest
+          uses: actions/checkout@v4
+
         - name: Download study-batches.txt
           run: |
             wget https://github.com/AntaresSimulatorTeam/Antares_Simulator_Tests_NR/releases/download/${{ github.event.inputs.antares_tests_tag }}/study-batches.txt
@@ -72,7 +75,7 @@ jobs:
 
         steps:
         - name: Checkout SimTest
-          uses: actions/checkout@v2
+          uses: actions/checkout@v4
 
         - name: Pre-requisites (Windows)
           if: ${{ startsWith(matrix.os, 'windows') }}
