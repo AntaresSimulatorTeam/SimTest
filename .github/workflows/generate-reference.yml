@@ -12,11 +12,11 @@ on:
         required: true
       antares_tag:
         description: "Antares_Simulator solver tag"
-        default: v8.0.3
+        default: v9.0.0
         required: true
       antares_tests_tag:
         description: "Antares_Simulator_Tests_NR"
-        default: v8.0.0
+        default: v9.0.0
         required: true
 
 jobs:
