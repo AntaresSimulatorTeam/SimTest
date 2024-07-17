@@ -57,7 +57,7 @@ jobs:
         - name: Upload study-batches.txt
           env:
             GITHUB_TOKEN: ${{ github.token }}
-            tag: ${{ github.event.inputs.antares_tag }}
+            tag: ${{ github.event.inputs.release_tag }}
           run: |
             gh release upload "$tag" study-batches.txt
 
@@ -137,6 +137,6 @@ jobs:
         - name: Upload .zip
           env:
             GITHUB_TOKEN: ${{ github.token }}
-            tag: ${{ github.event.inputs.antares_tag }}
+            tag: ${{ github.event.inputs.release_tag }}
           run: |
             gh release upload "$tag" results.zip#${{ matrix.batch }}-${{ matrix.os }}.zip
