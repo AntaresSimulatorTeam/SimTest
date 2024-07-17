@@ -41,7 +41,7 @@ jobs:
                 --repo="$GITHUB_REPOSITORY" \
                 --title="$title" \
                 --target="$target_branch" \
-                --notes="Antares_Simulator: $antares_tag \nAntares_Simulator_Tests_NR: $antares_tests_tag"
+                --notes="Antares_Simulator: $antares_tag \r\nAntares_Simulator_Tests_NR: $antares_tests_tag"
 
         - name: Download study-batches.txt
           run: |
