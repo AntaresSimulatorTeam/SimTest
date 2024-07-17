@@ -22,7 +22,6 @@ on:
 jobs:
     release:
       runs-on: ubuntu-latest
-      needs: release
       outputs:
         batches: ${{ steps.read_batches.outputs.batches }}
 
@@ -45,7 +44,6 @@ jobs:
                 --notes="Antares_Simulator: $antares_tag"
                 --notes="Antares_Simulator_Tests_NR: $antares_tests_tag"
 
-
         - name: Download study-batches.txt
           run: |
             wget https://github.com/AntaresSimulatorTeam/Antares_Simulator_Tests_NR/releases/download/${{ github.event.inputs.antares_tests_tag }}/study-batches.txt
@@ -65,7 +63,7 @@ jobs:
 
     generation:
         runs-on: ${{ matrix.os }}
-        needs: [release, matrix]
+        needs: [release]
         strategy:
           fail-fast: false
           matrix:
