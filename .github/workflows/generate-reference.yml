@@ -62,11 +62,11 @@ jobs:
 
     generation:
         runs-on: ${{ matrix.os }}
-        needs: [release]
+        needs: release
         strategy:
           fail-fast: false
           matrix:
-            batch: ${{ fromJson(needs.matrix.outputs.batches) }}
+            batch: ${{ fromJson(needs.release.outputs.batches) }}
             os: [ubuntu-20.04, windows-2022]
 
         steps:
