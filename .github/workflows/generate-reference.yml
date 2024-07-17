@@ -131,6 +131,9 @@ jobs:
               echo Antares_Simulator_Tests_NR ${{ github.event.inputs.antares_tests_tag }} >> ${{ matrix.batch }}/version.txt
               echo SimTest ${{ github.event.inputs.release_tag }} >> ${{ matrix.batch }}/version.txt
 
+       - name: zip results
+          run: zip -q -r results.zip ${{ matrix.batch }}
+
         - name: Upload .zip
           env:
             GITHUB_TOKEN: ${{ github.token }}
