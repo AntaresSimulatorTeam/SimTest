@@ -41,7 +41,7 @@ jobs:
                 --repo="$GITHUB_REPOSITORY" \
                 --title="$title" \
                 --target="$target_branch" \
-                --notes="Antares_Simulator: $antares_tag \
+                --notes="Antares_Simulator: $antares_tag
                 Antares_Simulator_Tests_NR: $antares_tests_tag"
 
         - name: Download study-batches.txt
@@ -136,4 +136,4 @@ jobs:
             GITHUB_TOKEN: ${{ github.token }}
             tag: ${{ github.event.inputs.antares_tag }}
           run: |
-            gh release upload "$tag" study-batches.txt#${{ matrix.batch }}-${{ matrix.os }}.zip
+            gh release upload "$tag" results.zip#${{ matrix.batch }}-${{ matrix.os }}.zip
