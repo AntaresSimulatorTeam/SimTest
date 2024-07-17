@@ -132,11 +132,11 @@ jobs:
               echo SimTest ${{ github.event.inputs.release_tag }} >> ${{ matrix.batch }}/version.txt
 
         - name: zip results
-          run: zip -q -r results.zip ${{ matrix.batch }}
+          run: zip -q -r {{ matrix.batch }}-${{ matrix.os }}.zip ${{ matrix.batch }}
 
         - name: Upload .zip
           env:
             GITHUB_TOKEN: ${{ github.token }}
             tag: ${{ github.event.inputs.release_tag }}
           run: |
-            gh release upload "$tag" results.zip#${{ matrix.batch }}-${{ matrix.os }}.zip
+            gh release upload "$tag" ${{ matrix.batch }}-${{ matrix.os }}.zip
