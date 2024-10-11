@@ -34,9 +34,12 @@ def make_command_to_run(path_where_to_find_exe, batch_name, study_path):
         print(f"Found executabled : {exe_path}")
 
         command_to_run = [exe_path, "-i", str(study_path)]
+
+        command_to_run.append('--use-ortools')
         if batch_name == "valid-milp":
-            command_to_run.append('--use-ortools')
             command_to_run.append('--ortools-solver=coin')
+        else:
+            command_to_run.append('--ortools-solver=sirius')
 
         if batch_name == "valid-named-mps":
             command_to_run.append('--named-mps-problems')
