@@ -35,8 +35,7 @@ def make_command_to_run(path_where_to_find_exe, batch_name, study_path):
 
         command_to_run = [exe_path, "-i", str(study_path)]
         if batch_name == "valid-milp":
-            command_to_run.append('--use-ortools')
-            command_to_run.append('--ortools-solver=coin')
+            command_to_run.append('--solver=coin')
 
         if batch_name == "valid-named-mps":
             command_to_run.append('--named-mps-problems')
