@@ -32,7 +32,11 @@ for study_path in study_path_collection:
     command_to_run = make_command_to_run(path_where_to_find_exe, batch_name, study_path)
     result = run_command(command_to_run)
     ret.append(result)
-    print('OK' if result else 'KO')
+    if result:
+        print('Run study OK')
+    else:
+        print ('Error while running study, aborting')
+        return
 
     antares_utils.move_output_to_reference(study_path)
 
