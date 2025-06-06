@@ -36,7 +36,7 @@ for study_path in study_path_collection:
         print('Run study OK')
     else:
         print ('Error while running study, aborting')
-        return
+        exit(1)
 
     antares_utils.move_output_to_reference(study_path)
 
