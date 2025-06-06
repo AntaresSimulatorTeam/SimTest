@@ -102,6 +102,7 @@ jobs:
           run: |
             unzip -q antares_simulator.zip
             rm antares_simulator.zip
+            mv solver/Release/* .
 
         - name: Download Antares_Simulator_Tests
           run: wget https://github.com/AntaresSimulatorTeam/Antares_Simulator_Tests_NR/releases/download/${{ github.event.inputs.antares_tests_tag }}/${{ matrix.batch }}.zip -O input.zip
