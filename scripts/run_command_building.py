@@ -19,26 +19,15 @@ def make_command_to_run(path_where_to_find_exe, batch_name, study_path):
     exe_path = Path()
     exe_identifier = "solver" # Default value
 
-    if batch_name == "ts-generator":
-        exe_identifier = "ts-generator"
-        exe_path = find_exe_path(path_where_to_find_exe, exe_identifier)
-        print(f"Found executabled : {exe_path}")
+    exe_path = find_exe_path(path_where_to_find_exe, exe_identifier)
+    print(f"Found executabled : {exe_path}")
 
-        cluster_to_gen_file = open(study_path / "clustersToGen.txt", 'r')
-        cluster_to_gen = cluster_to_gen_file.readline().rstrip()
-        cluster_to_gen_file.close()
-        command_to_run = [exe_path, cluster_to_gen, str(study_path)]
+    command_to_run = [exe_path, "-i", str(study_path)]
+    if batch_name == "valid-milp":
+        command_to_run.append('--solver=coin')
 
-    else:
-        exe_path = find_exe_path(path_where_to_find_exe, exe_identifier)
-        print(f"Found executabled : {exe_path}")
-
-        command_to_run = [exe_path, "-i", str(study_path)]
-        if batch_name == "valid-milp":
-            command_to_run.append('--solver=coin')
-
-        if batch_name == "valid-named-mps":
-            command_to_run.append('--named-mps-problems')
+    if batch_name == "valid-named-mps":
+        command_to_run.append('--named-mps-problems')
 
     return command_to_run
 
