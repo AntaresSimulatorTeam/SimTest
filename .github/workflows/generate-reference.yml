@@ -121,7 +121,7 @@ jobs:
           if: ${{ startsWith(matrix.os, 'windows') }}
           run: |
             ANTARES_TAG=${{ github.event.inputs.antares_tag }}
-            python3 scripts/generate_reference.py ${{ matrix.batch }} solver/Release
+            python3 scripts/generate_reference.py ${{ matrix.batch }} antares-solver.exe
           shell: bash
 
         - name: Write tags to file
