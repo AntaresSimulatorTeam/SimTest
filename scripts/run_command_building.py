@@ -7,6 +7,9 @@ def make_command_to_run(path_where_to_find_exe, batch_name, study_path):
     exe_path = Path()
     exe_identifier = "solver" # Default value
 
+    exe_path = path_where_to_find_exe.resolve()
+    print(f"Found executabled : {exe_path}")
+
     command_to_run = [exe_path, "-i", str(study_path)]
     if batch_name == "valid-milp":
         command_to_run.append('--solver=coin')
