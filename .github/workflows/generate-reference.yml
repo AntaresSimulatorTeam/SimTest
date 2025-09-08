@@ -115,7 +115,7 @@ jobs:
           if: ${{ startsWith(matrix.os, 'ubuntu') }}
           run: |
             ANTARES_TAG=${{ github.event.inputs.antares_tag }}
-            python3 scripts/generate_reference.py ${{ matrix.batch }} antares-${ANTARES_TAG/v/}-Ubuntu-22.04/bin
+            python3 scripts/generate_reference.py ${{ matrix.batch }} antares-${ANTARES_TAG/v/}-Ubuntu-22.04/bin/antares-solver
 
         - name: Generate results (Windows)
           if: ${{ startsWith(matrix.os, 'windows') }}
