@@ -13,8 +13,6 @@ def make_command_to_run(path_where_to_find_exe, batch_name, study_path):
     command_to_run = [exe_path, "-i", str(study_path)]
     if batch_name == "valid-milp":
         command_to_run.append('--solver=coin')
-    else:
-        command_to_run.append('--linear-solver=highs')
 
     if batch_name == "valid-named-mps":
         command_to_run.append('--named-mps-problems')
