@@ -1,0 +1,144 @@
+name: Reference generation
+
+on:
+  # Manual launch
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "Release tag"
+        required: true
+      release_name:
+        description: "Release name"
+        required: true
+      antares_tag:
+        description: "Antares_Simulator solver tag"
+        default: v9.0.0
+        required: true
+      antares_tests_tag:
+        description: "Antares_Simulator_Tests_NR"
+        default: v9.0.0
+        required: true
+
+jobs:
+    release:
+      runs-on: ubuntu-latest
+      outputs:
+        batches: ${{ steps.read_batches.outputs.batches }}
+
+      steps:
+        - name: Checkout SimTest
+          uses: actions/checkout@v4
+
+        - name: Create release
+          env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            tag: ${{ github.event.inputs.release_tag }}
+            title: ${{ github.event.inputs.release_name }}
+            antares_tag: ${{ github.event.inputs.antares_tag }}
+            antares_tests_tag: ${{ github.event.inputs.antares_tests_tag }}
+          run: |
+            gh release create "$tag" \
+                --repo="$GITHUB_REPOSITORY" \
+                --title="$title" \
+                --target="$target_branch" \
+                --notes="Antares_Simulator: $antares_tag
+                Antares_Simulator_Tests_NR: $antares_tests_tag"
+
+        - name: Download study-batches.txt
+          run: |
+            wget https://github.com/AntaresSimulatorTeam/Antares_Simulator_Tests_NR/releases/download/${{ github.event.inputs.antares_tests_tag }}/study-batches.txt
+
+        - name: Read study-batches.txt
+          id: read_batches
+          run: |
+            BATCHES=$(printf "\"%s\"," $(cat study-batches.txt) | sed "s/^/[/;s/,$/]/")
+            echo "batches=$BATCHES" >> $GITHUB_OUTPUT
+
+        - name: Upload study-batches.txt
+          env:
+            GITHUB_TOKEN: ${{ github.token }}
+            tag: ${{ github.event.inputs.release_tag }}
+          run: |
+            gh release upload "$tag" study-batches.txt
+
+    generation:
+        runs-on: ${{ matrix.os }}
+        needs: release
+        strategy:
+          fail-fast: false
+          matrix:
+            batch: ${{ fromJson(needs.release.outputs.batches) }}
+            os: [ubuntu-22.04, windows-2022]
+
+        steps:
+        - name: Checkout SimTest
+          uses: actions/checkout@v4
+
+        - name: Pre-requisites (Windows)
+          if: ${{ startsWith(matrix.os, 'windows') }}
+          run: choco install wget zip unzip --no-progress
+
+        - name: Download Antares_Simulator archive (Ubuntu)
+          if: ${{ startsWith(matrix.os, 'ubuntu') }}
+          run: |
+            ANTARES_TAG=${{ github.event.inputs.antares_tag }}
+            wget https://github.com/AntaresSimulatorTeam/Antares_Simulator/releases/download/${{ github.event.inputs.antares_tag }}/antares-${ANTARES_TAG/v/}-Ubuntu-22.04.tar.gz -O antares_simulator.tar.gz
+
+        - name: Download Antares_Simulator archive (Windows)
+          if: ${{ startsWith(matrix.os, 'windows') }}
+          run: |
+            ANTARES_TAG=${{ github.event.inputs.antares_tag }}
+            wget https://github.com/AntaresSimulatorTeam/Antares_Simulator/releases/download/${{ github.event.inputs.antares_tag }}/antares-solver_windows.zip -O antares_simulator.zip
+          shell: bash
+
+        - name: Unpack Antares_Simulator, clean archive (Ubuntu)
+          if: ${{ startsWith(matrix.os, 'ubuntu') }}
+          run: |
+            tar xf antares_simulator.tar.gz
+            rm antares_simulator.tar.gz
+
+        - name: Unpack Antares_Simulator, clean archive (Windows)
+          if: ${{ startsWith(matrix.os, 'windows') }}
+          run: |
+            unzip -q antares_simulator.zip
+            rm antares_simulator.zip
+
+        - name: Download Antares_Simulator_Tests
+          run: wget https://github.com/AntaresSimulatorTeam/Antares_Simulator_Tests_NR/releases/download/${{ github.event.inputs.antares_tests_tag }}/${{ matrix.batch }}.zip -O input.zip
+
+        - name: Unpack test studies, clean archive
+          run: |
+            unzip -q input.zip
+            rm input.zip
+
+        - name: Generate results (Ubuntu)
+          if: ${{ startsWith(matrix.os, 'ubuntu') }}
+          run: |
+            ANTARES_TAG=${{ github.event.inputs.antares_tag }}
+            python3 scripts/generate_reference.py ${{ matrix.batch }} antares-${ANTARES_TAG/v/}-Ubuntu-22.04/bin/antares-solver
+
+        - name: Generate results (Windows)
+          if: ${{ startsWith(matrix.os, 'windows') }}
+          run: |
+            ANTARES_TAG=${{ github.event.inputs.antares_tag }}
+            python3 scripts/generate_reference.py ${{ matrix.batch }} antares-solver.exe
+          shell: bash
+
+        - name: Write tags to file
+          shell: bash
+          run: |
+              echo Antares_Simulator ${{ github.event.inputs.antares_tag }} >> ${{ matrix.batch }}/version.txt
+              echo Antares_Simulator_Tests_NR ${{ github.event.inputs.antares_tests_tag }} >> ${{ matrix.batch }}/version.txt
+              echo SimTest ${{ github.event.inputs.release_tag }} >> ${{ matrix.batch }}/version.txt
+
+        - name: zip results
+          run: zip -q -r ${{ matrix.batch }}-${{ matrix.os }}.zip ${{ matrix.batch }}
+
+        - name: Upload .zip
+          env:
+            GITHUB_TOKEN: ${{ github.token }}
+            tag: ${{ github.event.inputs.release_tag }}
+          shell: bash
+          run: |
+            gh release upload "$tag" ${{ matrix.batch }}-${{ matrix.os }}.zip
+
