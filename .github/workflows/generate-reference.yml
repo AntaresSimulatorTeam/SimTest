@@ -78,28 +78,17 @@ jobs:
           if: ${{ startsWith(matrix.os, 'windows') }}
           run: choco install wget zip unzip --no-progress
 
-        - name: Download Antares_Simulator archive (Ubuntu)
+        - name: Download, unpack Antares_Simulator, clean archive (Ubuntu)
           if: ${{ startsWith(matrix.os, 'ubuntu') }}
           run: |
-            ANTARES_TAG=${{ github.event.inputs.antares_tag }}
-            wget https://github.com/AntaresSimulatorTeam/Antares_Simulator/releases/download/${{ github.event.inputs.antares_tag }}/antares-${ANTARES_TAG/v/}-Ubuntu-22.04.tar.gz -O antares_simulator.tar.gz
-
-        - name: Download Antares_Simulator archive (Windows)
-          if: ${{ startsWith(matrix.os, 'windows') }}
-          run: |
-            ANTARES_TAG=${{ github.event.inputs.antares_tag }}
-            wget https://github.com/AntaresSimulatorTeam/Antares_Simulator/releases/download/${{ github.event.inputs.antares_tag }}/antares-solver_windows.zip -O antares_simulator.zip
-          shell: bash
-
-        - name: Unpack Antares_Simulator, clean archive (Ubuntu)
-          if: ${{ startsWith(matrix.os, 'ubuntu') }}
-          run: |
+            wget https://github.com/AntaresSimulatorTeam/Antares_Simulator/releases/download/${{ github.event.inputs.antares_tag }}/antares-solver_ubuntu22.04.tar.gz -O antares_simulator.tar.gz
             tar xf antares_simulator.tar.gz
             rm antares_simulator.tar.gz
 
-        - name: Unpack Antares_Simulator, clean archive (Windows)
+        - name: Download, unpack Antares_Simulator, clean archive (Windows)
           if: ${{ startsWith(matrix.os, 'windows') }}
           run: |
+            wget https://github.com/AntaresSimulatorTeam/Antares_Simulator/releases/download/${{ github.event.inputs.antares_tag }}/antares-solver_windows.zip -O antares_simulator.zip
             unzip -q antares_simulator.zip
             rm antares_simulator.zip
 
@@ -115,7 +104,7 @@ jobs:
           if: ${{ startsWith(matrix.os, 'ubuntu') }}
           run: |
             ANTARES_TAG=${{ github.event.inputs.antares_tag }}
-            python3 scripts/generate_reference.py ${{ matrix.batch }} antares-${ANTARES_TAG/v/}-Ubuntu-22.04/bin/antares-solver
+            python3 scripts/generate_reference.py ${{ matrix.batch }} antares-solver
 
         - name: Generate results (Windows)
           if: ${{ startsWith(matrix.os, 'windows') }}
