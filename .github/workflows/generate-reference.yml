@@ -14,8 +14,8 @@ on:
         required: true
       antares_tests_tag:
         description: "Antares_Simulator_Tests_NR"
-        default: v9.0.0
-        required: true
+        default: ''
+        required: false
   # Also accept repository_dispatch so this workflow can be triggered by other workflows
   repository_dispatch:
     types: [ generate-reference, antares-rc-published ]
@@ -26,7 +26,7 @@ jobs:
       # Compute inputs using workflow inputs or repository_dispatch client_payload (fallbacks)
       env:
         ANTARES_TAG: ${{ github.event.inputs.antares_tag || github.event.client_payload.antares_tag || 'v9.0.0' }}
-        ANTARES_TESTS_TAG: ${{ github.event.inputs.antares_tests_tag || github.event.client_payload.antares_tests_tag || 'v9.0.0' }}
+        ANTARES_TESTS_TAG: ${{ github.event.inputs.antares_tests_tag || github.event.client_payload.antares_tests_tag || '' }}
         TARGET_BRANCH: ${{ github.event.inputs.target_branch || github.event.client_payload.target_branch || 'main' }}
       outputs:
         batches: ${{ steps.read_batches.outputs.batches }}
@@ -50,6 +50,15 @@ jobs:
             # Derive release tag from ANTARES_TAG (no more separate release_tag input)
             tag="$antares_tag"
 
+            # If antares_tests_tag is empty, use top of main branch
+            if [ -z "$antares_tests_tag" ]; then
+              tests_tag="main"
+              tests_note="(top of main branch)"
+            else
+              tests_tag="$antares_tests_tag"
+              tests_note="(release tag)"
+            fi
+
             # Title derived from Antares tag to avoid duplication
             title="SimTest reference generation $tag"
 
@@ -59,21 +68,29 @@ jobs:
                 --title="$title" \
                 --target="$target_branch" \
                 --notes="Antares_Simulator: $antares_tag
-                Antares_Simulator_Tests_NR: $antares_tests_tag"
+                Antares_Simulator_Tests_NR: $tests_tag $tests_note"
 
             # Export outputs for downstream steps
             echo "release_tag=$tag" >> $GITHUB_OUTPUT
             echo "antares_tag=$antares_tag" >> $GITHUB_OUTPUT
-            echo "antares_tests_tag=$antares_tests_tag" >> $GITHUB_OUTPUT
+            echo "antares_tests_tag=$tests_tag" >> $GITHUB_OUTPUT
 
         - name: Download study-batches.txt
           run: |
-            wget https://github.com/AntaresSimulatorTeam/Antares_Simulator_Tests_NR/releases/download/${{ env.ANTARES_TESTS_TAG }}/study-batches.txt
+            set -euo pipefail
+            # If ANTARES_TESTS_TAG (from env) is empty, download from top of main branch
+            if [ -z "${{ env.ANTARES_TESTS_TAG }}" ]; then
+              echo "No antares_tests_tag provided — downloading study-batches.txt from Antares_Simulator_Tests_NR main branch"
+              wget https://raw.githubusercontent.com/AntaresSimulatorTeam/Antares_Simulator_Tests_NR/main/study-batches.txt -O study-batches.txt
+            else
+              echo "Using release tag ${ { env.ANTARES_TESTS_TAG } } to download study-batches.txt"
+              wget https://github.com/AntaresSimulatorTeam/Antares_Simulator_Tests_NR/releases/download/${{ env.ANTARES_TESTS_TAG }}/study-batches.txt
+            fi
 
         - name: Read study-batches.txt
           id: read_batches
           run: |
-            BATCHES=$(printf "\"%s\"," $(cat study-batches.txt) | sed "s/^/[/;s/,$/]/")
+            BATCHES=$(printf '"%s",' $(cat study-batches.txt) | sed "s/^/[/;s/,$/]/")
             echo "batches=$BATCHES" >> $GITHUB_OUTPUT
 
         - name: Upload study-batches.txt
@@ -115,7 +132,17 @@ jobs:
             rm antares_simulator.zip
 
         - name: Download Antares_Simulator_Tests
-          run: wget https://github.com/AntaresSimulatorTeam/Antares_Simulator_Tests_NR/releases/download/${{ needs.release.outputs.antares_tests_tag }}/${{ matrix.batch }}.zip -O input.zip
+          run: |
+            set -euo pipefail
+            # If the release output antares_tests_tag is "main", fetch the batch zip from the main branch raw content;
+            # otherwise fetch from the release asset for that tag.
+            if [ "${{ needs.release.outputs.antares_tests_tag }}" = "main" ]; then
+              echo "Downloading ${matrix.batch}.zip from Antares_Simulator_Tests_NR main branch"
+              wget https://raw.githubusercontent.com/AntaresSimulatorTeam/Antares_Simulator_Tests_NR/main/${{ matrix.batch }}.zip -O input.zip
+            else
+              echo "Downloading ${matrix.batch}.zip from Antares_Simulator_Tests_NR releases tag ${ { needs.release.outputs.antares_tests_tag } }"
+              wget https://github.com/AntaresSimulatorTeam/Antares_Simulator_Tests_NR/releases/download/${{ needs.release.outputs.antares_tests_tag }}/${{ matrix.batch }}.zip -O input.zip
+            fi
 
         - name: Unpack test studies, clean archive
           run: |
