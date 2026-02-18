@@ -18,12 +18,25 @@ on:
         description: "Antares_Simulator_Tests_NR"
         default: v9.0.0
         required: true
+  # Also accept repository_dispatch so this workflow can be triggered by other workflows
+  repository_dispatch:
+    types: [ generate-reference, antares-rc-published ]
 
 jobs:
     release:
       runs-on: ubuntu-latest
+      # Compute inputs using workflow inputs or repository_dispatch client_payload (fallbacks)
+      env:
+        RELEASE_TAG: ${{ github.event.inputs.release_tag || github.event.client_payload.release_tag || github.event.client_payload.tag_name || '' }}
+        RELEASE_NAME: ${{ github.event.inputs.release_name || github.event.client_payload.release_name || '' }}
+        ANTARES_TAG: ${{ github.event.inputs.antares_tag || github.event.client_payload.antares_tag || 'v9.0.0' }}
+        ANTARES_TESTS_TAG: ${{ github.event.inputs.antares_tests_tag || github.event.client_payload.antares_tests_tag || 'v9.0.0' }}
+        TARGET_BRANCH: ${{ github.event.inputs.target_branch || github.event.client_payload.target_branch || 'main' }}
       outputs:
         batches: ${{ steps.read_batches.outputs.batches }}
+        antares_tag: ${{ steps.set_outputs.outputs.antares_tag }}
+        antares_tests_tag: ${{ steps.set_outputs.outputs.antares_tests_tag }}
+        release_tag: ${{ steps.set_outputs.outputs.release_tag }}
 
       steps:
         - name: Checkout SimTest
@@ -32,10 +45,11 @@ jobs:
         - name: Create release
           env:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-            tag: ${{ github.event.inputs.release_tag }}
-            title: ${{ github.event.inputs.release_name }}
-            antares_tag: ${{ github.event.inputs.antares_tag }}
-            antares_tests_tag: ${{ github.event.inputs.antares_tests_tag }}
+            tag: ${{ env.RELEASE_TAG }}
+            title: ${{ env.RELEASE_NAME }}
+            antares_tag: ${{ env.ANTARES_TAG }}
+            antares_tests_tag: ${{ env.ANTARES_TESTS_TAG }}
+            target_branch: ${{ env.TARGET_BRANCH }}
           run: |
             gh release create "$tag" \
                 --repo="$GITHUB_REPOSITORY" \
@@ -46,7 +60,7 @@ jobs:
 
         - name: Download study-batches.txt
           run: |
-            wget https://github.com/AntaresSimulatorTeam/Antares_Simulator_Tests_NR/releases/download/${{ github.event.inputs.antares_tests_tag }}/study-batches.txt
+            wget https://github.com/AntaresSimulatorTeam/Antares_Simulator_Tests_NR/releases/download/${{ env.ANTARES_TESTS_TAG }}/study-batches.txt
 
         - name: Read study-batches.txt
           id: read_batches
@@ -57,9 +71,16 @@ jobs:
         - name: Upload study-batches.txt
           env:
             GITHUB_TOKEN: ${{ github.token }}
-            tag: ${{ github.event.inputs.release_tag }}
+            tag: ${{ env.RELEASE_TAG }}
           run: |
             gh release upload "$tag" study-batches.txt
+
+        - name: Set job outputs
+          id: set_outputs
+          run: |
+            echo "antares_tag=${ANTARES_TAG}" >> $GITHUB_OUTPUT
+            echo "antares_tests_tag=${ANTARES_TESTS_TAG}" >> $GITHUB_OUTPUT
+            echo "release_tag=${RELEASE_TAG}" >> $GITHUB_OUTPUT
 
     generation:
         runs-on: ${{ matrix.os }}
@@ -81,19 +102,19 @@ jobs:
         - name: Download, unpack Antares_Simulator, clean archive (Ubuntu)
           if: ${{ startsWith(matrix.os, 'ubuntu') }}
           run: |
-            wget https://github.com/AntaresSimulatorTeam/Antares_Simulator/releases/download/${{ github.event.inputs.antares_tag }}/antares-solver_ubuntu22.04.tar.gz -O antares_simulator.tar.gz
+            wget https://github.com/AntaresSimulatorTeam/Antares_Simulator/releases/download/${{ needs.release.outputs.antares_tag }}/antares-solver_ubuntu22.04.tar.gz -O antares_simulator.tar.gz
             tar xf antares_simulator.tar.gz
             rm antares_simulator.tar.gz
 
         - name: Download, unpack Antares_Simulator, clean archive (Windows)
           if: ${{ startsWith(matrix.os, 'windows') }}
           run: |
-            wget https://github.com/AntaresSimulatorTeam/Antares_Simulator/releases/download/${{ github.event.inputs.antares_tag }}/antares-solver_windows.zip -O antares_simulator.zip
+            wget https://github.com/AntaresSimulatorTeam/Antares_Simulator/releases/download/${{ needs.release.outputs.antares_tag }}/antares-solver_windows.zip -O antares_simulator.zip
             unzip -q antares_simulator.zip
             rm antares_simulator.zip
 
         - name: Download Antares_Simulator_Tests
-          run: wget https://github.com/AntaresSimulatorTeam/Antares_Simulator_Tests_NR/releases/download/${{ github.event.inputs.antares_tests_tag }}/${{ matrix.batch }}.zip -O input.zip
+          run: wget https://github.com/AntaresSimulatorTeam/Antares_Simulator_Tests_NR/releases/download/${{ needs.release.outputs.antares_tests_tag }}/${{ matrix.batch }}.zip -O input.zip
 
         - name: Unpack test studies, clean archive
           run: |
@@ -103,22 +124,22 @@ jobs:
         - name: Generate results (Ubuntu)
           if: ${{ startsWith(matrix.os, 'ubuntu') }}
           run: |
-            ANTARES_TAG=${{ github.event.inputs.antares_tag }}
+            ANTARES_TAG=${{ needs.release.outputs.antares_tag }}
             python3 scripts/generate_reference.py ${{ matrix.batch }} antares-solver
 
         - name: Generate results (Windows)
           if: ${{ startsWith(matrix.os, 'windows') }}
           run: |
-            ANTARES_TAG=${{ github.event.inputs.antares_tag }}
+            ANTARES_TAG=${{ needs.release.outputs.antares_tag }}
             python3 scripts/generate_reference.py ${{ matrix.batch }} antares-solver.exe
           shell: bash
 
         - name: Write tags to file
           shell: bash
           run: |
-              echo Antares_Simulator ${{ github.event.inputs.antares_tag }} >> ${{ matrix.batch }}/version.txt
-              echo Antares_Simulator_Tests_NR ${{ github.event.inputs.antares_tests_tag }} >> ${{ matrix.batch }}/version.txt
-              echo SimTest ${{ github.event.inputs.release_tag }} >> ${{ matrix.batch }}/version.txt
+              echo Antares_Simulator ${{ needs.release.outputs.antares_tag }} >> ${{ matrix.batch }}/version.txt
+              echo Antares_Simulator_Tests_NR ${{ needs.release.outputs.antares_tests_tag }} >> ${{ matrix.batch }}/version.txt
+              echo SimTest ${{ needs.release.outputs.release_tag }} >> ${{ matrix.batch }}/version.txt
 
         - name: zip results
           run: zip -q -r ${{ matrix.batch }}-${{ matrix.os }}.zip ${{ matrix.batch }}
@@ -126,7 +147,7 @@ jobs:
         - name: Upload .zip
           env:
             GITHUB_TOKEN: ${{ github.token }}
-            tag: ${{ github.event.inputs.release_tag }}
+            tag: ${{ needs.release.outputs.release_tag }}
           shell: bash
           run: |
             gh release upload "$tag" ${{ matrix.batch }}-${{ matrix.os }}.zip
