@@ -1,5 +1,9 @@
 name: Reference generation
 
+permissions:
+  contents: write
+  actions: read
+
 on:
   # Manual launch
   workflow_dispatch:
