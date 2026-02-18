@@ -34,15 +34,16 @@ jobs:
         TARGET_BRANCH: ${{ github.event.inputs.target_branch || github.event.client_payload.target_branch || 'main' }}
       outputs:
         batches: ${{ steps.read_batches.outputs.batches }}
-        antares_tag: ${{ steps.set_outputs.outputs.antares_tag }}
-        antares_tests_tag: ${{ steps.set_outputs.outputs.antares_tests_tag }}
-        release_tag: ${{ steps.set_outputs.outputs.release_tag }}
+        antares_tag: ${{ steps.create_release.outputs.antares_tag }}
+        antares_tests_tag: ${{ steps.create_release.outputs.antares_tests_tag }}
+        release_tag: ${{ steps.create_release.outputs.release_tag }}
 
       steps:
         - name: Checkout SimTest
           uses: actions/checkout@v4
 
-        - name: Create release
+        - id: create_release
+          name: Create release
           env:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
             tag: ${{ env.RELEASE_TAG }}
@@ -51,12 +52,30 @@ jobs:
             antares_tests_tag: ${{ env.ANTARES_TESTS_TAG }}
             target_branch: ${{ env.TARGET_BRANCH }}
           run: |
+            set -euo pipefail
+            # Fallback: if no tag provided (e.g., repository_dispatch without payload), use ANTARES_TAG
+            if [ -z "${tag:-}" ]; then
+              echo "No release tag provided via inputs or client_payload; deriving from ANTARES_TAG=$antares_tag"
+              tag="$antares_tag"
+            fi
+
+            # Fallback for title
+            if [ -z "${title:-}" ]; then
+              title="SimTest reference generation $tag"
+            fi
+
+            echo "Creating release: tag=$tag title=$title target=$target_branch"
             gh release create "$tag" \
                 --repo="$GITHUB_REPOSITORY" \
                 --title="$title" \
                 --target="$target_branch" \
                 --notes="Antares_Simulator: $antares_tag
                 Antares_Simulator_Tests_NR: $antares_tests_tag"
+
+            # Export outputs for downstream steps
+            echo "release_tag=$tag" >> $GITHUB_OUTPUT
+            echo "antares_tag=$antares_tag" >> $GITHUB_OUTPUT
+            echo "antares_tests_tag=$antares_tests_tag" >> $GITHUB_OUTPUT
 
         - name: Download study-batches.txt
           run: |
@@ -71,16 +90,9 @@ jobs:
         - name: Upload study-batches.txt
           env:
             GITHUB_TOKEN: ${{ github.token }}
-            tag: ${{ env.RELEASE_TAG }}
+            tag: ${{ steps.create_release.outputs.release_tag }}
           run: |
             gh release upload "$tag" study-batches.txt
-
-        - name: Set job outputs
-          id: set_outputs
-          run: |
-            echo "antares_tag=${ANTARES_TAG}" >> $GITHUB_OUTPUT
-            echo "antares_tests_tag=${ANTARES_TESTS_TAG}" >> $GITHUB_OUTPUT
-            echo "release_tag=${RELEASE_TAG}" >> $GITHUB_OUTPUT
 
     generation:
         runs-on: ${{ matrix.os }}
@@ -151,4 +163,3 @@ jobs:
           shell: bash
           run: |
             gh release upload "$tag" ${{ matrix.batch }}-${{ matrix.os }}.zip
-

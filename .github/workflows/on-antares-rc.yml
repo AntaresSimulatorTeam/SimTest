@@ -33,23 +33,32 @@ jobs:
           # Example: install dependencies
           # sudo apt-get update && sudo apt-get install -y ...
 
-      - name: Download Antares RC artifact (optional)
-        if: env.ANTARES_RELEASE_URL != ''
+      - name: Trigger generate-reference workflow (repository_dispatch)
+        env:
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ANTARES_RC_TAG: ${{ github.event.client_payload.tag_name }}
+          ANTARES_RELEASE_URL: ${{ github.event.client_payload.release_url }}
         run: |
-          echo "Antares release URL: $ANTARES_RELEASE_URL"
-          # Example: curl -L -o antares_rc.tar.gz "$ANTARES_RELEASE_URL"
+          set -euo pipefail
+          echo "Triggering generate-reference workflow in $GITHUB_REPOSITORY"
+          PAYLOAD=$(printf '{"event_type":"generate-reference","client_payload":{"tag_name":"%s","release_url":"%s","release_tag":"%s","release_name":"Antares RC %s","antares_tag":"%s"}}' "$ANTARES_RC_TAG" "$ANTARES_RELEASE_URL" "$ANTARES_RC_TAG" "$ANTARES_RC_TAG" "$ANTARES_RC_TAG")
+          echo "Payload: $PAYLOAD"
+          curl -s -X POST \
+            -H "Accept: application/vnd.github.everest-preview+json" \
+            -H "Authorization: token $GITHUB_TOKEN" \
+            https://api.github.com/repos/$GITHUB_REPOSITORY/dispatches \
+            -d "$PAYLOAD"
 
-      - name: Run regeneration script
+      - name: Run regeneration script (optional)
         id: regen
         run: |
           set -euo pipefail
-          echo "Starting regeneration for $ANTARES_RC_TAG"
-          # Replace with real script / command
+          echo "Attempt local regeneration if script exists"
           if [ -x ./scripts/regenerate_all_results.sh ]; then
             ./scripts/regenerate_all_results.sh --antares-tag "$ANTARES_RC_TAG"
           else
-            echo "Warning: regeneration script not found; exiting with failure"
-            exit 2
+            echo "No local regeneration script found; skipping (generate-reference triggered instead)"
           fi
 
       - name: Upload results artifact
