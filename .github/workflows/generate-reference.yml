@@ -8,12 +8,6 @@ on:
   # Manual launch
   workflow_dispatch:
     inputs:
-      release_tag:
-        description: "Release tag"
-        required: true
-      release_name:
-        description: "Release name"
-        required: true
       antares_tag:
         description: "Antares_Simulator solver tag"
         default: v9.0.0
@@ -31,8 +25,6 @@ jobs:
       runs-on: ubuntu-latest
       # Compute inputs using workflow inputs or repository_dispatch client_payload (fallbacks)
       env:
-        RELEASE_TAG: ${{ github.event.inputs.release_tag || github.event.client_payload.release_tag || github.event.client_payload.tag_name || '' }}
-        RELEASE_NAME: ${{ github.event.inputs.release_name || github.event.client_payload.release_name || '' }}
         ANTARES_TAG: ${{ github.event.inputs.antares_tag || github.event.client_payload.antares_tag || 'v9.0.0' }}
         ANTARES_TESTS_TAG: ${{ github.event.inputs.antares_tests_tag || github.event.client_payload.antares_tests_tag || 'v9.0.0' }}
         TARGET_BRANCH: ${{ github.event.inputs.target_branch || github.event.client_payload.target_branch || 'main' }}
@@ -50,23 +42,16 @@ jobs:
           name: Create release
           env:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-            tag: ${{ env.RELEASE_TAG }}
-            title: ${{ env.RELEASE_NAME }}
             antares_tag: ${{ env.ANTARES_TAG }}
             antares_tests_tag: ${{ env.ANTARES_TESTS_TAG }}
             target_branch: ${{ env.TARGET_BRANCH }}
           run: |
             set -euo pipefail
-            # Fallback: if no tag provided (e.g., repository_dispatch without payload), use ANTARES_TAG
-            if [ -z "${tag:-}" ]; then
-              echo "No release tag provided via inputs or client_payload; deriving from ANTARES_TAG=$antares_tag"
-              tag="$antares_tag"
-            fi
+            # Derive release tag from ANTARES_TAG (no more separate release_tag input)
+            tag="$antares_tag"
 
-            # Fallback for title
-            if [ -z "${title:-}" ]; then
-              title="SimTest reference generation $tag"
-            fi
+            # Title derived from Antares tag to avoid duplication
+            title="SimTest reference generation $tag"
 
             echo "Creating release: tag=$tag title=$title target=$target_branch"
             gh release create "$tag" \
