@@ -14,7 +14,7 @@ on:
         default: ''
       antares_tag:
         description: "Antares_Simulator solver tag"
-        default: v9.0.0
+        default: ''
         required: true
       antares_tests_tag:
         description: "Antares_Simulator_Tests_NR"
@@ -29,7 +29,7 @@ jobs:
       runs-on: ubuntu-latest
       # Compute inputs using workflow inputs or repository_dispatch client_payload (fallbacks)
       env:
-        ANTARES_TAG: ${{ github.event.inputs.antares_tag || github.event.client_payload.antares_tag || 'v9.0.0' }}
+        ANTARES_TAG: ${{ github.event.inputs.antares_tag || github.event.client_payload.antares_tag }}
         ANTARES_TESTS_TAG: ${{ github.event.inputs.antares_tests_tag || github.event.client_payload.antares_tests_tag || '' }}
         TARGET_BRANCH: ${{ github.event.inputs.target_branch || github.event.client_payload.target_branch || 'main' }}
       outputs:
@@ -41,6 +41,14 @@ jobs:
       steps:
         - name: Checkout SimTest
           uses: actions/checkout@v4
+
+        - name: Validate antares_tag input
+          run: |
+            set -euo pipefail
+            if [ -z "${ANTARES_TAG:-}" ]; then
+              echo "ERROR: antares_tag must be provided either via workflow inputs (antares_tag) or repository_dispatch client_payload (antares_tag)."
+              exit 1
+            fi
 
         - id: create_release
           name: Create release
@@ -95,7 +103,7 @@ jobs:
               echo "No antares_tests_tag provided — downloading study-batches.txt from Antares_Simulator_Tests_NR main branch"
               wget https://raw.githubusercontent.com/AntaresSimulatorTeam/Antares_Simulator_Tests_NR/main/study-batches.txt -O study-batches.txt
             else
-              echo "Using release tag ${ { env.ANTARES_TESTS_TAG } } to download study-batches.txt"
+              echo "Using release tag ${{ env.ANTARES_TESTS_TAG }} to download study-batches.txt"
               wget https://github.com/AntaresSimulatorTeam/Antares_Simulator_Tests_NR/releases/download/${{ env.ANTARES_TESTS_TAG }}/study-batches.txt
             fi
 
@@ -152,7 +160,7 @@ jobs:
               echo "Downloading ${matrix.batch}.zip from Antares_Simulator_Tests_NR main branch"
               wget https://raw.githubusercontent.com/AntaresSimulatorTeam/Antares_Simulator_Tests_NR/main/${{ matrix.batch }}.zip -O input.zip
             else
-              echo "Downloading ${matrix.batch}.zip from Antares_Simulator_Tests_NR releases tag ${ { needs.release.outputs.antares_tests_tag } }"
+              echo "Downloading ${matrix.batch}.zip from Antares_Simulator_Tests_NR releases tag ${{ needs.release.outputs.antares_tests_tag }}"
               wget https://github.com/AntaresSimulatorTeam/Antares_Simulator_Tests_NR/releases/download/${{ needs.release.outputs.antares_tests_tag }}/${{ matrix.batch }}.zip -O input.zip
             fi
 
