@@ -8,6 +8,10 @@ on:
   # Manual launch
   workflow_dispatch:
     inputs:
+      release_tag:
+        description: "Release tag"
+        required: false
+        default: ''
       antares_tag:
         description: "Antares_Simulator solver tag"
         default: v9.0.0
@@ -45,10 +49,18 @@ jobs:
             antares_tag: ${{ env.ANTARES_TAG }}
             antares_tests_tag: ${{ env.ANTARES_TESTS_TAG }}
             target_branch: ${{ env.TARGET_BRANCH }}
+            # Compute release input here (may come from workflow_dispatch or repository_dispatch client_payload)
+            release_input: ${{ github.event.inputs.release_tag || github.event.client_payload.release_tag || '' }}
           run: |
             set -euo pipefail
-            # Derive release tag from ANTARES_TAG (no more separate release_tag input)
-            tag="$antares_tag"
+            # Derive release tag: prefer explicit release_input, fallback to ANTARES_TAG
+            if [ -n "$release_input" ]; then
+              tag="$release_input"
+              note_scope="(explicit release_tag provided)"
+            else
+              tag="$antares_tag"
+              note_scope="(derived from antares_tag)"
+            fi
 
             # If antares_tests_tag is empty, use top of main branch
             if [ -z "$antares_tests_tag" ]; then
