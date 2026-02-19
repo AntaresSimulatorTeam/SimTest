@@ -98,14 +98,28 @@ jobs:
         - name: Download study-batches.txt
           run: |
             set -euo pipefail
-            # If ANTARES_TESTS_TAG (from env) is empty, download from top of main branch
-            if [ -z "${{ env.ANTARES_TESTS_TAG }}" ]; then
-              echo "No antares_tests_tag provided — downloading study-batches.txt from Antares_Simulator_Tests_NR main branch"
-              wget https://raw.githubusercontent.com/AntaresSimulatorTeam/Antares_Simulator_Tests_NR/main/study-batches.txt -O study-batches.txt
-            else
-              echo "Using release tag ${{ env.ANTARES_TESTS_TAG }} to download study-batches.txt"
-              wget https://github.com/AntaresSimulatorTeam/Antares_Simulator_Tests_NR/releases/download/${{ env.ANTARES_TESTS_TAG }}/study-batches.txt
-            fi
+            # If no ANTARES_TESTS_TAG was provided, checkout the tests repo and copy study-batches.txt from its main branch.
+            # Otherwise download the study-batches.txt from the release assets for the provided tag.
+
+        - name: Checkout Antares_Simulator_Tests_NR (main)
+          if: ${{ env.ANTARES_TESTS_TAG == '' }}
+          uses: actions/checkout@v4
+          with:
+            repository: AntaresSimulatorTeam/Antares_Simulator_Tests_NR
+            ref: main
+            path: antares_tests
+
+        - name: Copy study-batches.txt from main branch
+          if: ${{ env.ANTARES_TESTS_TAG == '' }}
+          run: |
+            cp -f antares_tests/study-batches.txt study-batches.txt
+
+        - name: Download study-batches.txt from release
+          if: ${{ env.ANTARES_TESTS_TAG != '' }}
+          run: |
+            set -euo pipefail
+            echo "Using release tag ${{ env.ANTARES_TESTS_TAG }} to download study-batches.txt"
+            wget https://github.com/AntaresSimulatorTeam/Antares_Simulator_Tests_NR/releases/download/${{ env.ANTARES_TESTS_TAG }}/study-batches.txt
 
         - name: Read study-batches.txt
           id: read_batches
@@ -151,18 +165,29 @@ jobs:
             unzip -q antares_simulator.zip
             rm antares_simulator.zip
 
-        - name: Download Antares_Simulator_Tests
+        - name: Checkout Antares_Simulator_Tests_NR (main)
+          if: ${{ needs.release.outputs.antares_tests_tag == 'main' }}
+          uses: actions/checkout@v4
+          with:
+            repository: AntaresSimulatorTeam/Antares_Simulator_Tests_NR
+            ref: main
+            path: Antares_Simulator_Tests_NR
+
+        # If the release output antares_tests_tag is "main", copy the batch zip from the checked-out repository;
+        # otherwise fetch from the release asset for that tag.
+
+        - name: Copy Antares_Simulator_Tests batch from main branch
+          if: ${{ needs.release.outputs.antares_tests_tag == 'main' }}
+          run: |
+            echo "Copying ${matrix.batch}.zip from checked-out Antares_Simulator_Tests_NR main branch"
+            cp Antares_Simulator_Tests_NR/${{ matrix.batch }}.zip input.zip
+
+        - name: Download Antares_Simulator_Tests from release
+          if: ${{ needs.release.outputs.antares_tests_tag != 'main' }}
           run: |
             set -euo pipefail
-            # If the release output antares_tests_tag is "main", fetch the batch zip from the main branch raw content;
-            # otherwise fetch from the release asset for that tag.
-            if [ "${{ needs.release.outputs.antares_tests_tag }}" = "main" ]; then
-              echo "Downloading ${matrix.batch}.zip from Antares_Simulator_Tests_NR main branch"
-              wget https://raw.githubusercontent.com/AntaresSimulatorTeam/Antares_Simulator_Tests_NR/main/${{ matrix.batch }}.zip -O input.zip
-            else
-              echo "Downloading ${matrix.batch}.zip from Antares_Simulator_Tests_NR releases tag ${{ needs.release.outputs.antares_tests_tag }}"
-              wget https://github.com/AntaresSimulatorTeam/Antares_Simulator_Tests_NR/releases/download/${{ needs.release.outputs.antares_tests_tag }}/${{ matrix.batch }}.zip -O input.zip
-            fi
+            echo "Downloading ${matrix.batch}.zip from Antares_Simulator_Tests_NR releases tag ${{ needs.release.outputs.antares_tests_tag }}"
+            wget https://github.com/AntaresSimulatorTeam/Antares_Simulator_Tests_NR/releases/download/${{ needs.release.outputs.antares_tests_tag }}/${{ matrix.batch }}.zip -O input.zip
 
         - name: Unpack test studies, clean archive
           run: |
