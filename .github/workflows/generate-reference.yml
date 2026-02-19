@@ -94,11 +94,6 @@ jobs:
             echo "antares_tag=$antares_tag" >> $GITHUB_OUTPUT
             echo "antares_tests_tag=$tests_tag" >> $GITHUB_OUTPUT
 
-        - name: Download study-batches.txt
-          run: |
-            set -euo pipefail
-            # If no ANTARES_TESTS_TAG was provided, checkout the tests repo and copy study-batches.txt from its main branch.
-            # Otherwise download the study-batches.txt from the release assets for the provided tag.
 
         - name: Checkout Antares_Simulator_Tests_NR (main)
           if: ${{ env.ANTARES_TESTS_TAG == '' }}
