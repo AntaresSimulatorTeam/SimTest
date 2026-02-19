@@ -18,7 +18,7 @@ on:
         required: false
   # Also accept repository_dispatch so this workflow can be triggered by other workflows
   repository_dispatch:
-    types: [ generate-reference, antares-rc-published ]
+    types: [ generate-reference ]
 
 jobs:
     release:
