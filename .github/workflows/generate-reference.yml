@@ -174,38 +174,38 @@ jobs:
           if: ${{ needs.release.outputs.antares_tests_tag == 'main' }}
           shell: bash
           run: |
-             set -euo pipefail
-             echo "Preparing ${{ matrix.batch }} from checked-out Antares_Simulator_Tests_NR (main)"
-             # If there's a directory for the batch, copy it directly into the workspace (no zip/unzip required)
-             if [ -d "Antares_Simulator_Tests_NR/${{ matrix.batch }}" ]; then
-               echo "Copying directory Antares_Simulator_Tests_NR/${{ matrix.batch }} -> ./"
-               rm -rf "${{ matrix.batch }}" || true
-               cp -a "Antares_Simulator_Tests_NR/${{ matrix.batch }}" ./
-             # If there's a prebuilt zip in the repo, extract it here
-             elif [ -f "Antares_Simulator_Tests_NR/${{ matrix.batch }}.zip" ]; then
-               echo "Found prebuilt zip Antares_Simulator_Tests_NR/${{ matrix.batch }}.zip, extracting to ./"
-               unzip -q "Antares_Simulator_Tests_NR/${{ matrix.batch }}.zip"
-             else
-               echo "Directory listing for Antares_Simulator_Tests_NR:"
-               ls -la Antares_Simulator_Tests_NR || true
-               echo "ERROR: neither directory nor zip found for batch: Antares_Simulator_Tests_NR/${{ matrix.batch }} (or .zip)"
-               exit 1
-             fi
+            set -euo pipefail
+            echo "Preparing ${{ matrix.batch }} from checked-out Antares_Simulator_Tests_NR (main)"
+            # If there's a directory for the batch, copy it directly into the workspace (no zip/unzip required)
+            if [ -d "Antares_Simulator_Tests_NR/${{ matrix.batch }}" ]; then
+              echo "Copying directory Antares_Simulator_Tests_NR/${{ matrix.batch }} -> ./"
+              rm -rf "${{ matrix.batch }}" || true
+              cp -a "Antares_Simulator_Tests_NR/${{ matrix.batch }}" ./
+            # If there's a prebuilt zip in the repo, extract it here
+            elif [ -f "Antares_Simulator_Tests_NR/${{ matrix.batch }}.zip" ]; then
+              echo "Found prebuilt zip Antares_Simulator_Tests_NR/${{ matrix.batch }}.zip, extracting to ./"
+              unzip -q "Antares_Simulator_Tests_NR/${{ matrix.batch }}.zip"
+            else
+              echo "Directory listing for Antares_Simulator_Tests_NR:"
+              ls -la Antares_Simulator_Tests_NR || true
+              echo "ERROR: neither directory nor zip found for batch: Antares_Simulator_Tests_NR/${{ matrix.batch }} (or .zip)"
+              exit 1
+            fi
 
         - name: Download Antares_Simulator_Tests from release
           if: ${{ needs.release.outputs.antares_tests_tag != 'main' }}
           shell: bash
           run: |
-             set -euo pipefail
-             echo "Downloading ${{ matrix.batch }}.zip from Antares_Simulator_Tests_NR releases tag ${{ needs.release.outputs.antares_tests_tag }}"
-             wget https://github.com/AntaresSimulatorTeam/Antares_Simulator_Tests_NR/releases/download/${{ needs.release.outputs.antares_tests_tag }}/${{ matrix.batch }}.zip -O input.zip
+            set -euo pipefail
+            echo "Downloading ${{ matrix.batch }}.zip from Antares_Simulator_Tests_NR releases tag ${{ needs.release.outputs.antares_tests_tag }}"
+            wget https://github.com/AntaresSimulatorTeam/Antares_Simulator_Tests_NR/releases/download/${{ needs.release.outputs.antares_tests_tag }}/${{ matrix.batch }}.zip -O input.zip
 
         - name: Unpack test studies, clean archive
           if: ${{ needs.release.outputs.antares_tests_tag != 'main' }}
           shell: bash
           run: |
-             unzip -q input.zip
-             rm input.zip
+            unzip -q input.zip
+            rm input.zip
 
         - name: Generate results (Ubuntu)
           if: ${{ startsWith(matrix.os, 'ubuntu') }}
@@ -223,9 +223,9 @@ jobs:
         - name: Write tags to file
           shell: bash
           run: |
-              echo Antares_Simulator ${{ needs.release.outputs.antares_tag }} >> ${{ matrix.batch }}/version.txt
-              echo Antares_Simulator_Tests_NR ${{ needs.release.outputs.antares_tests_tag }} >> ${{ matrix.batch }}/version.txt
-              echo SimTest ${{ needs.release.outputs.release_tag }} >> ${{ matrix.batch }}/version.txt
+            echo Antares_Simulator ${{ needs.release.outputs.antares_tag }} >> ${{ matrix.batch }}/version.txt
+            echo Antares_Simulator_Tests_NR ${{ needs.release.outputs.antares_tests_tag }} >> ${{ matrix.batch }}/version.txt
+            echo SimTest ${{ needs.release.outputs.release_tag }} >> ${{ matrix.batch }}/version.txt
 
         - name: zip results
           run: zip -q -r ${{ matrix.batch }}-${{ matrix.os }}.zip ${{ matrix.batch }}
