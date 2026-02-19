@@ -154,14 +154,14 @@ jobs:
         - name: Download, unpack Antares_Simulator, clean archive (Ubuntu)
           if: ${{ startsWith(matrix.os, 'ubuntu') }}
           run: |
-            wget https://github.com/MarechalJason/Antares_Simulator/releases/download/${{ needs.release.outputs.antares_tag }}/antares-solver_ubuntu22.04.tar.gz -O antares_simulator.tar.gz
+            wget https://github.com/AntaresSimulatorTeam/Antares_Simulator/releases/download/${{ needs.release.outputs.antares_tag }}/antares-solver_ubuntu22.04.tar.gz -O antares_simulator.tar.gz
             tar xf antares_simulator.tar.gz
             rm antares_simulator.tar.gz
 
         - name: Download, unpack Antares_Simulator, clean archive (Windows)
           if: ${{ startsWith(matrix.os, 'windows') }}
           run: |
-            wget https://github.com/MarechalJason/Antares_Simulator/releases/download/${{ needs.release.outputs.antares_tag }}/antares-solver_windows.zip -O antares_simulator.zip
+            wget https://github.com/AntaresSimulatorTeam/Antares_Simulator/releases/download/${{ needs.release.outputs.antares_tag }}/antares-solver_windows.zip -O antares_simulator.zip
             unzip -q antares_simulator.zip
             rm antares_simulator.zip
 
