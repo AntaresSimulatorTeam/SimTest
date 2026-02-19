@@ -14,7 +14,6 @@ on:
         default: ''
       antares_tag:
         description: "Antares_Simulator solver tag"
-        default: ''
         required: true
       antares_tests_tag:
         description: "Antares_Simulator_Tests_NR"
