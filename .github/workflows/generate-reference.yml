@@ -1,63 +1,130 @@
 name: Reference generation
 
+permissions:
+  contents: write
+  actions: read
+
 on:
   # Manual launch
   workflow_dispatch:
     inputs:
       release_tag:
         description: "Release tag"
-        required: true
-      release_name:
-        description: "Release name"
-        required: true
+        required: false
+        default: ''
       antares_tag:
         description: "Antares_Simulator solver tag"
-        default: v9.0.0
         required: true
       antares_tests_tag:
         description: "Antares_Simulator_Tests_NR"
-        default: v9.0.0
-        required: true
+        default: ''
+        required: false
+  # Also accept repository_dispatch so this workflow can be triggered by other workflows
+  repository_dispatch:
+    types: [ generate-reference ]
 
 jobs:
     release:
       runs-on: ubuntu-latest
+      # Compute inputs using workflow inputs or repository_dispatch client_payload (fallbacks)
+      env:
+        ANTARES_TAG: ${{ github.event.inputs.antares_tag || github.event.client_payload.antares_tag }}
+        ANTARES_TESTS_TAG: ${{ github.event.inputs.antares_tests_tag || github.event.client_payload.antares_tests_tag || '' }}
+        TARGET_BRANCH: ${{ github.event.inputs.target_branch || github.event.client_payload.target_branch || 'main' }}
       outputs:
         batches: ${{ steps.read_batches.outputs.batches }}
+        antares_tag: ${{ steps.create_release.outputs.antares_tag }}
+        antares_tests_tag: ${{ steps.create_release.outputs.antares_tests_tag }}
+        release_tag: ${{ steps.create_release.outputs.release_tag }}
 
       steps:
         - name: Checkout SimTest
           uses: actions/checkout@v4
 
-        - name: Create release
+        - name: Validate antares_tag input
+          run: |
+            set -euo pipefail
+            if [ -z "${ANTARES_TAG:-}" ]; then
+              echo "ERROR: antares_tag must be provided either via workflow inputs (antares_tag) or repository_dispatch client_payload (antares_tag)."
+              exit 1
+            fi
+
+        - id: create_release
+          name: Create release
           env:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-            tag: ${{ github.event.inputs.release_tag }}
-            title: ${{ github.event.inputs.release_name }}
-            antares_tag: ${{ github.event.inputs.antares_tag }}
-            antares_tests_tag: ${{ github.event.inputs.antares_tests_tag }}
+            antares_tag: ${{ env.ANTARES_TAG }}
+            antares_tests_tag: ${{ env.ANTARES_TESTS_TAG }}
+            target_branch: ${{ env.TARGET_BRANCH }}
+            # Compute release input here (may come from workflow_dispatch or repository_dispatch client_payload)
+            release_input: ${{ github.event.inputs.release_tag || github.event.client_payload.release_tag || '' }}
           run: |
+            set -euo pipefail
+            # Derive release tag: prefer explicit release_input, fallback to ANTARES_TAG
+            if [ -n "$release_input" ]; then
+              tag="$release_input"
+              note_scope="(explicit release_tag provided)"
+            else
+              tag="$antares_tag"
+              note_scope="(derived from antares_tag)"
+            fi
+
+            # If antares_tests_tag is empty, use top of main branch
+            if [ -z "$antares_tests_tag" ]; then
+              tests_tag="main"
+              tests_note="(top of main branch)"
+            else
+              tests_tag="$antares_tests_tag"
+              tests_note="(release tag)"
+            fi
+
+            # Title derived from Antares tag to avoid duplication
+            title="SimTest reference generation $tag"
+
+            echo "Creating release: tag=$tag title=$title target=$target_branch"
             gh release create "$tag" \
                 --repo="$GITHUB_REPOSITORY" \
                 --title="$title" \
                 --target="$target_branch" \
                 --notes="Antares_Simulator: $antares_tag
-                Antares_Simulator_Tests_NR: $antares_tests_tag"
+                Antares_Simulator_Tests_NR: $tests_tag $tests_note"
 
-        - name: Download study-batches.txt
+            # Export outputs for downstream steps
+            echo "release_tag=$tag" >> $GITHUB_OUTPUT
+            echo "antares_tag=$antares_tag" >> $GITHUB_OUTPUT
+            echo "antares_tests_tag=$tests_tag" >> $GITHUB_OUTPUT
+
+
+        - name: Checkout Antares_Simulator_Tests_NR (main)
+          if: ${{ env.ANTARES_TESTS_TAG == '' }}
+          uses: actions/checkout@v4
+          with:
+            repository: AntaresSimulatorTeam/Antares_Simulator_Tests_NR
+            ref: main
+            path: antares_tests
+
+        - name: Copy study-batches.txt from main branch
+          if: ${{ env.ANTARES_TESTS_TAG == '' }}
           run: |
-            wget https://github.com/AntaresSimulatorTeam/Antares_Simulator_Tests_NR/releases/download/${{ github.event.inputs.antares_tests_tag }}/study-batches.txt
+            cp -f antares_tests/study-batches.txt study-batches.txt
+
+        - name: Download study-batches.txt from release
+          if: ${{ env.ANTARES_TESTS_TAG != '' }}
+          run: |
+            set -euo pipefail
+            echo "Using release tag ${{ env.ANTARES_TESTS_TAG }} to download study-batches.txt"
+            wget https://github.com/AntaresSimulatorTeam/Antares_Simulator_Tests_NR/releases/download/${{ env.ANTARES_TESTS_TAG }}/study-batches.txt
 
         - name: Read study-batches.txt
           id: read_batches
           run: |
-            BATCHES=$(printf "\"%s\"," $(cat study-batches.txt) | sed "s/^/[/;s/,$/]/")
+            BATCHES=$(printf '"%s",' $(cat study-batches.txt) | sed "s/^/[/;s/,$/]/")
             echo "batches=$BATCHES" >> $GITHUB_OUTPUT
 
         - name: Upload study-batches.txt
           env:
             GITHUB_TOKEN: ${{ github.token }}
-            tag: ${{ github.event.inputs.release_tag }}
+            tag: ${{ steps.create_release.outputs.release_tag }}
           run: |
             gh release upload "$tag" study-batches.txt
 
@@ -81,21 +148,61 @@ jobs:
         - name: Download, unpack Antares_Simulator, clean archive (Ubuntu)
           if: ${{ startsWith(matrix.os, 'ubuntu') }}
           run: |
-            wget https://github.com/AntaresSimulatorTeam/Antares_Simulator/releases/download/${{ github.event.inputs.antares_tag }}/antares-solver_ubuntu22.04.tar.gz -O antares_simulator.tar.gz
+            wget https://github.com/AntaresSimulatorTeam/Antares_Simulator/releases/download/${{ needs.release.outputs.antares_tag }}/antares-solver_ubuntu22.04.tar.gz -O antares_simulator.tar.gz
             tar xf antares_simulator.tar.gz
             rm antares_simulator.tar.gz
 
         - name: Download, unpack Antares_Simulator, clean archive (Windows)
           if: ${{ startsWith(matrix.os, 'windows') }}
           run: |
-            wget https://github.com/AntaresSimulatorTeam/Antares_Simulator/releases/download/${{ github.event.inputs.antares_tag }}/antares-solver_windows.zip -O antares_simulator.zip
+            wget https://github.com/AntaresSimulatorTeam/Antares_Simulator/releases/download/${{ needs.release.outputs.antares_tag }}/antares-solver_windows.zip -O antares_simulator.zip
             unzip -q antares_simulator.zip
             rm antares_simulator.zip
 
-        - name: Download Antares_Simulator_Tests
-          run: wget https://github.com/AntaresSimulatorTeam/Antares_Simulator_Tests_NR/releases/download/${{ github.event.inputs.antares_tests_tag }}/${{ matrix.batch }}.zip -O input.zip
+        - name: Checkout Antares_Simulator_Tests_NR (main)
+          if: ${{ needs.release.outputs.antares_tests_tag == 'main' }}
+          uses: actions/checkout@v4
+          with:
+            repository: AntaresSimulatorTeam/Antares_Simulator_Tests_NR
+            ref: main
+            path: Antares_Simulator_Tests_NR
+
+        # If the release output antares_tests_tag is "main", copy the batch zip from the checked-out repository;
+        # otherwise fetch from the release asset for that tag.
+
+        - name: Copy Antares_Simulator_Tests batch from main branch
+          if: ${{ needs.release.outputs.antares_tests_tag == 'main' }}
+          shell: bash
+          run: |
+            set -euo pipefail
+            echo "Preparing ${{ matrix.batch }} from checked-out Antares_Simulator_Tests_NR (main)"
+            # If there's a directory for the batch, copy it directly into the workspace (no zip/unzip required)
+            if [ -d "Antares_Simulator_Tests_NR/${{ matrix.batch }}" ]; then
+              echo "Copying directory Antares_Simulator_Tests_NR/${{ matrix.batch }} -> ./"
+              rm -rf "${{ matrix.batch }}" || true
+              cp -a "Antares_Simulator_Tests_NR/${{ matrix.batch }}" ./
+            # If there's a prebuilt zip in the repo, extract it here
+            elif [ -f "Antares_Simulator_Tests_NR/${{ matrix.batch }}.zip" ]; then
+              echo "Found prebuilt zip Antares_Simulator_Tests_NR/${{ matrix.batch }}.zip, extracting to ./"
+              unzip -q "Antares_Simulator_Tests_NR/${{ matrix.batch }}.zip"
+            else
+              echo "Directory listing for Antares_Simulator_Tests_NR:"
+              ls -la Antares_Simulator_Tests_NR || true
+              echo "ERROR: neither directory nor zip found for batch: Antares_Simulator_Tests_NR/${{ matrix.batch }} (or .zip)"
+              exit 1
+            fi
+
+        - name: Download Antares_Simulator_Tests from release
+          if: ${{ needs.release.outputs.antares_tests_tag != 'main' }}
+          shell: bash
+          run: |
+            set -euo pipefail
+            echo "Downloading ${{ matrix.batch }}.zip from Antares_Simulator_Tests_NR releases tag ${{ needs.release.outputs.antares_tests_tag }}"
+            wget https://github.com/AntaresSimulatorTeam/Antares_Simulator_Tests_NR/releases/download/${{ needs.release.outputs.antares_tests_tag }}/${{ matrix.batch }}.zip -O input.zip
 
         - name: Unpack test studies, clean archive
+          if: ${{ needs.release.outputs.antares_tests_tag != 'main' }}
+          shell: bash
           run: |
             unzip -q input.zip
             rm input.zip
@@ -103,22 +210,22 @@ jobs:
         - name: Generate results (Ubuntu)
           if: ${{ startsWith(matrix.os, 'ubuntu') }}
           run: |
-            ANTARES_TAG=${{ github.event.inputs.antares_tag }}
+            ANTARES_TAG=${{ needs.release.outputs.antares_tag }}
             python3 scripts/generate_reference.py ${{ matrix.batch }} antares-solver
 
         - name: Generate results (Windows)
           if: ${{ startsWith(matrix.os, 'windows') }}
           run: |
-            ANTARES_TAG=${{ github.event.inputs.antares_tag }}
+            ANTARES_TAG=${{ needs.release.outputs.antares_tag }}
             python3 scripts/generate_reference.py ${{ matrix.batch }} antares-solver.exe
           shell: bash
 
         - name: Write tags to file
           shell: bash
           run: |
-              echo Antares_Simulator ${{ github.event.inputs.antares_tag }} >> ${{ matrix.batch }}/version.txt
-              echo Antares_Simulator_Tests_NR ${{ github.event.inputs.antares_tests_tag }} >> ${{ matrix.batch }}/version.txt
-              echo SimTest ${{ github.event.inputs.release_tag }} >> ${{ matrix.batch }}/version.txt
+            echo Antares_Simulator ${{ needs.release.outputs.antares_tag }} >> ${{ matrix.batch }}/version.txt
+            echo Antares_Simulator_Tests_NR ${{ needs.release.outputs.antares_tests_tag }} >> ${{ matrix.batch }}/version.txt
+            echo SimTest ${{ needs.release.outputs.release_tag }} >> ${{ matrix.batch }}/version.txt
 
         - name: zip results
           run: zip -q -r ${{ matrix.batch }}-${{ matrix.os }}.zip ${{ matrix.batch }}
@@ -126,8 +233,7 @@ jobs:
         - name: Upload .zip
           env:
             GITHUB_TOKEN: ${{ github.token }}
-            tag: ${{ github.event.inputs.release_tag }}
+            tag: ${{ needs.release.outputs.release_tag }}
           shell: bash
           run: |
             gh release upload "$tag" ${{ matrix.batch }}-${{ matrix.os }}.zip
-
