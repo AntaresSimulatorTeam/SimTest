@@ -1,0 +1,41 @@
+name: Trigger Reference generation (dispatch)
+
+permissions:
+  contents: write
+  actions: read
+
+on:
+  workflow_dispatch:
+    inputs:
+      antares_tag:
+        description: "Antares_Simulator solver tag"
+        required: true
+        type: string
+      antares_tests_tag:
+        description: "Antares_Simulator_Tests_NR tag (optional)"
+        required: false
+        default: ''
+        type: string
+      release_tag:
+        description: "Release tag (optional)"
+        required: false
+        default: ''
+        type: string
+      target_branch:
+        description: "Target branch for the release"
+        required: false
+        default: 'main'
+        type: string
+
+jobs:
+  call-generate-reference:
+    # Call the reusable workflow defined in this repo
+    uses: ./.github/workflows/generate-reference.yml
+    with:
+      antares_tag: ${{ github.event.inputs.antares_tag }}
+      antares_tests_tag: ${{ github.event.inputs.antares_tests_tag }}
+      release_tag: ${{ github.event.inputs.release_tag }}
+      target_branch: ${{ github.event.inputs.target_branch }}
+    secrets:
+      # Forward token so the reusable workflow can create releases and upload assets
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

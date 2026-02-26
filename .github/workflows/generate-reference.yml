@@ -4,33 +4,38 @@ permissions:
   contents: write
   actions: read
 
+# Make this a reusable workflow callable via workflow_call
 on:
-  # Manual launch
-  workflow_dispatch:
+  workflow_call:
     inputs:
       release_tag:
         description: "Release tag"
         required: false
         default: ''
+        type: string
       antares_tag:
         description: "Antares_Simulator solver tag"
         required: true
+        type: string
       antares_tests_tag:
         description: "Antares_Simulator_Tests_NR"
-        default: ''
         required: false
-  # Also accept repository_dispatch so this workflow can be triggered by other workflows
-  repository_dispatch:
-    types: [ generate-reference ]
+        default: ''
+        type: string
+      target_branch:
+        description: "Target branch to create the release on"
+        required: false
+        default: 'main'
+        type: string
 
 jobs:
     release:
       runs-on: ubuntu-latest
-      # Compute inputs using workflow inputs or repository_dispatch client_payload (fallbacks)
+      # Compute inputs using workflow_call inputs
       env:
-        ANTARES_TAG: ${{ github.event.inputs.antares_tag || github.event.client_payload.antares_tag }}
-        ANTARES_TESTS_TAG: ${{ github.event.inputs.antares_tests_tag || github.event.client_payload.antares_tests_tag || '' }}
-        TARGET_BRANCH: ${{ github.event.inputs.target_branch || github.event.client_payload.target_branch || 'main' }}
+        ANTARES_TAG: ${{ inputs.antares_tag }}
+        ANTARES_TESTS_TAG: ${{ inputs.antares_tests_tag }}
+        TARGET_BRANCH: ${{ inputs.target_branch }}
       outputs:
         batches: ${{ steps.read_batches.outputs.batches }}
         antares_tag: ${{ steps.create_release.outputs.antares_tag }}
@@ -45,7 +50,7 @@ jobs:
           run: |
             set -euo pipefail
             if [ -z "${ANTARES_TAG:-}" ]; then
-              echo "ERROR: antares_tag must be provided either via workflow inputs (antares_tag) or repository_dispatch client_payload (antares_tag)."
+              echo "ERROR: antares_tag must be provided via workflow inputs (antares_tag)."
               exit 1
             fi
 
@@ -56,8 +61,8 @@ jobs:
             antares_tag: ${{ env.ANTARES_TAG }}
             antares_tests_tag: ${{ env.ANTARES_TESTS_TAG }}
             target_branch: ${{ env.TARGET_BRANCH }}
-            # Compute release input here (may come from workflow_dispatch or repository_dispatch client_payload)
-            release_input: ${{ github.event.inputs.release_tag || github.event.client_payload.release_tag || '' }}
+            # Compute release input here (may come from workflow_call inputs)
+            release_input: ${{ inputs.release_tag }}
           run: |
             set -euo pipefail
             # Derive release tag: prefer explicit release_input, fallback to ANTARES_TAG
