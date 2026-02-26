@@ -99,6 +99,7 @@ jobs:
             title="SimTest reference generation $tag"
 
             echo "Creating release: tag=$tag title=$title target=$target_branch"
+            echo "Repos is $GITHUB_REPOSITORY"
             gh release create "$tag" \
                 --repo="$GITHUB_REPOSITORY" \
                 --title="$title" \
