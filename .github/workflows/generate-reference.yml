@@ -27,6 +27,10 @@ on:
         required: false
         default: 'main'
         type: string
+    secrets:
+      SIMTEST_PAT:
+        description: 'Optional personal access token to use instead of the runner token'
+        required: false
 
 jobs:
     release:
@@ -46,6 +50,15 @@ jobs:
         - name: Checkout SimTest
           uses: actions/checkout@v4
 
+        - name: Prepare tokens
+          # Prefer provided SIMTEST_PAT (from caller) over the automatic runner token
+          run: |
+            if [ -n "${{ secrets.SIMTEST_PAT || '' }}" ]; then
+              echo "GITHUB_TOKEN=${{ secrets.SIMTEST_PAT }}" >> $GITHUB_ENV
+            else
+              echo "GITHUB_TOKEN=${{ github.token }}" >> $GITHUB_ENV
+            fi
+
         - name: Validate antares_tag input
           run: |
             set -euo pipefail
@@ -57,7 +70,6 @@ jobs:
         - id: create_release
           name: Create release
           env:
-            GITHUB_TOKEN: ${{ github.token }}
             antares_tag: ${{ env.ANTARES_TAG }}
             antares_tests_tag: ${{ env.ANTARES_TESTS_TAG }}
             target_branch: ${{ env.TARGET_BRANCH }}
@@ -128,7 +140,6 @@ jobs:
 
         - name: Upload study-batches.txt
           env:
-            GITHUB_TOKEN: ${{ github.token }}
             tag: ${{ steps.create_release.outputs.release_tag }}
           run: |
             gh release upload "$tag" study-batches.txt
@@ -145,6 +156,15 @@ jobs:
         steps:
         - name: Checkout SimTest
           uses: actions/checkout@v4
+
+        - name: Prepare tokens
+          # Prefer provided SIMTEST_PAT (from caller) over the automatic runner token
+          run: |
+            if [ -n "${{ secrets.SIMTEST_PAT || '' }}" ]; then
+              echo "GITHUB_TOKEN=${{ secrets.SIMTEST_PAT }}" >> $GITHUB_ENV
+            else
+              echo "GITHUB_TOKEN=${{ github.token }}" >> $GITHUB_ENV
+            fi
 
         - name: Pre-requisites (Windows)
           if: ${{ startsWith(matrix.os, 'windows') }}
@@ -237,7 +257,6 @@ jobs:
 
         - name: Upload .zip
           env:
-            GITHUB_TOKEN: ${{ github.token }}
             tag: ${{ needs.release.outputs.release_tag }}
           shell: bash
           run: |
