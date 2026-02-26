@@ -27,6 +27,9 @@ on:
         required: false
         default: 'main'
         type: string
+    secrets:
+      GITHUB_TOKEN:
+        required: true
 
 jobs:
     release:
