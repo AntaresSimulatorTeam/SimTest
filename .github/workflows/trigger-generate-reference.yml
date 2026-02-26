@@ -21,21 +21,16 @@ on:
         required: false
         default: ''
         type: string
-      target_branch:
-        description: "Target branch for the release"
-        required: false
-        default: 'main'
-        type: string
 
 jobs:
   call-generate-reference:
     # Call the reusable workflow defined in this repo
     uses: ./.github/workflows/generate-reference.yml
     with:
-      antares_tag: ${{ github.event.inputs.antares_tag }}
-      antares_tests_tag: ${{ github.event.inputs.antares_tests_tag }}
-      release_tag: ${{ github.event.inputs.release_tag }}
-      target_branch: ${{ github.event.inputs.target_branch }}
+      antares_tag: ${{ github.event.inputs.antares_tag || github.event.client_payload.antares_tag }}
+      antares_tests_tag: ${{ github.event.inputs.antares_tests_tag || github.event.client_payload.antares_tests_tag || '' }}
+      release_tag: ${{ github.event.inputs.release_tag || github.event.client_payload.release_tag || '' }}
+      target_branch: ${{ github.event.inputs.target_branch || github.event.client_payload.target_branch || 'main' }}
     secrets:
       # Forward token so the reusable workflow can create releases and upload assets
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
