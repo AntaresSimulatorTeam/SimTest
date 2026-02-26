@@ -27,9 +27,6 @@ on:
         required: false
         default: 'main'
         type: string
-    secrets:
-      GITHUB_TOKEN:
-        required: true
 
 jobs:
     release:
@@ -60,7 +57,7 @@ jobs:
         - id: create_release
           name: Create release
           env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            GITHUB_TOKEN: ${{ github.token }}
             antares_tag: ${{ env.ANTARES_TAG }}
             antares_tests_tag: ${{ env.ANTARES_TESTS_TAG }}
             target_branch: ${{ env.TARGET_BRANCH }}

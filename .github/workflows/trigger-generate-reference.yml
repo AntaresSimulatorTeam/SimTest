@@ -31,6 +31,3 @@ jobs:
       antares_tests_tag: ${{ github.event.inputs.antares_tests_tag || github.event.client_payload.antares_tests_tag || '' }}
       release_tag: ${{ github.event.inputs.release_tag || github.event.client_payload.release_tag || '' }}
       target_branch: ${{ github.event.inputs.target_branch || github.event.client_payload.target_branch || 'main' }}
-    secrets:
-      # Forward token so the reusable workflow can create releases and upload assets
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
