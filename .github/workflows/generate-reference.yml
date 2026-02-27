@@ -1,36 +1,45 @@
 name: Reference generation
 
 permissions:
-  contents: write
-  actions: read
+  contents: write #Write tag to release
+  actions: read #Read workflows
 
+# Make this a reusable workflow callable via workflow_call
 on:
-  # Manual launch
-  workflow_dispatch:
+  workflow_call:
     inputs:
       release_tag:
         description: "Release tag"
         required: false
         default: ''
+        type: string
       antares_tag:
         description: "Antares_Simulator solver tag"
         required: true
+        type: string
       antares_tests_tag:
         description: "Antares_Simulator_Tests_NR"
-        default: ''
         required: false
-  # Also accept repository_dispatch so this workflow can be triggered by other workflows
-  repository_dispatch:
-    types: [ generate-reference ]
+        default: ''
+        type: string
+      target_branch:
+        description: "Target branch to create the release on"
+        required: false
+        default: 'main'
+        type: string
+    secrets:
+      SIMTEST_PAT:
+        description: 'Optional personal access token to use instead of the runner token'
+        required: false
 
 jobs:
     release:
       runs-on: ubuntu-latest
-      # Compute inputs using workflow inputs or repository_dispatch client_payload (fallbacks)
+      # Compute inputs using workflow_call inputs
       env:
-        ANTARES_TAG: ${{ github.event.inputs.antares_tag || github.event.client_payload.antares_tag }}
-        ANTARES_TESTS_TAG: ${{ github.event.inputs.antares_tests_tag || github.event.client_payload.antares_tests_tag || '' }}
-        TARGET_BRANCH: ${{ github.event.inputs.target_branch || github.event.client_payload.target_branch || 'main' }}
+        ANTARES_TAG: ${{ inputs.antares_tag }}
+        ANTARES_TESTS_TAG: ${{ inputs.antares_tests_tag }}
+        TARGET_BRANCH: ${{ inputs.target_branch }}
       outputs:
         batches: ${{ steps.read_batches.outputs.batches }}
         antares_tag: ${{ steps.create_release.outputs.antares_tag }}
@@ -41,25 +50,50 @@ jobs:
         - name: Checkout SimTest
           uses: actions/checkout@v4
 
+        - name: Prepare tokens
+          # Prefer provided SIMTEST_PAT (from caller) over the automatic runner token
+          run: |
+            if [ -n "${{ secrets.SIMTEST_PAT || '' }}" ]; then
+              echo "GITHUB_TOKEN=${{ secrets.SIMTEST_PAT }}" >> $GITHUB_ENV
+              echo "SIMTEST_PAT_PROVIDED=true" >> $GITHUB_ENV
+            else
+              echo "GITHUB_TOKEN=${{ github.token }}" >> $GITHUB_ENV
+              echo "SIMTEST_PAT_PROVIDED=false" >> $GITHUB_ENV
+            fi
+
         - name: Validate antares_tag input
           run: |
             set -euo pipefail
             if [ -z "${ANTARES_TAG:-}" ]; then
-              echo "ERROR: antares_tag must be provided either via workflow inputs (antares_tag) or repository_dispatch client_payload (antares_tag)."
+              echo "ERROR: antares_tag must be provided via workflow inputs (antares_tag)."
               exit 1
             fi
 
         - id: create_release
           name: Create release
           env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
             antares_tag: ${{ env.ANTARES_TAG }}
             antares_tests_tag: ${{ env.ANTARES_TESTS_TAG }}
             target_branch: ${{ env.TARGET_BRANCH }}
-            # Compute release input here (may come from workflow_dispatch or repository_dispatch client_payload)
-            release_input: ${{ github.event.inputs.release_tag || github.event.client_payload.release_tag || '' }}
+            # Compute release input here (may come from workflow_call inputs)
+            release_input: ${{ inputs.release_tag }}
           run: |
             set -euo pipefail
+
+            # If this workflow is invoked from another repository, the default github.token
+            # will belong to the caller and cannot create releases on this repo. Detect that
+            # case early and require the caller to provide a PAT via the SIMTEST_PAT secret.
+            caller_repo="$GITHUB_REPOSITORY"
+            target_repo="AntaresSimulatorTeam/SimTest"
+            if [ "$caller_repo" != "$target_repo" ] && [ "${SIMTEST_PAT_PROVIDED:-false}" != "true" ]; then
+              echo "ERROR: this reusable workflow is being called from a different repository: $caller_repo"
+              echo "The GITHUB_TOKEN provided to callers cannot create releases in $target_repo."
+              echo "Please call this workflow like this from the caller repository and provide a personal access token (SIMTEST_PAT) with repo permissions:"
+              echo "  jobs:\n    call:\n      uses: AntaresSimulatorTeam/SimTest/.github/workflows/generate-reference.yml@main\n      secrets: { SIMTEST_PAT: \\${{ secrets.SIMTEST_PAT }} }"
+              echo "Alternatively, run the workflow from the target repository so the runner's token has the proper permissions."
+              exit 1
+            fi
+
             # Derive release tag: prefer explicit release_input, fallback to ANTARES_TAG
             if [ -n "$release_input" ]; then
               tag="$release_input"
@@ -81,13 +115,12 @@ jobs:
             # Title derived from Antares tag to avoid duplication
             title="SimTest reference generation $tag"
 
-            echo "Creating release: tag=$tag title=$title target=$target_branch"
             gh release create "$tag" \
-                --repo="$GITHUB_REPOSITORY" \
+                --repo="AntaresSimulatorTeam/SimTest" \
                 --title="$title" \
                 --target="$target_branch" \
                 --notes="Antares_Simulator: $antares_tag
-                Antares_Simulator_Tests_NR: $tests_tag $tests_note"
+                Antares_Simulator_Tests_NR: $tests_tag $tests_note" \
 
             # Export outputs for downstream steps
             echo "release_tag=$tag" >> $GITHUB_OUTPUT
@@ -121,12 +154,12 @@ jobs:
             BATCHES=$(printf '"%s",' $(cat study-batches.txt) | sed "s/^/[/;s/,$/]/")
             echo "batches=$BATCHES" >> $GITHUB_OUTPUT
 
+        # Not using GITHUB_REPOSITORY here because the caller may be in a different repo
         - name: Upload study-batches.txt
           env:
-            GITHUB_TOKEN: ${{ github.token }}
             tag: ${{ steps.create_release.outputs.release_tag }}
           run: |
-            gh release upload "$tag" study-batches.txt
+            gh release upload "$tag" study-batches.txt --repo="AntaresSimulatorTeam/SimTest"
 
     generation:
         runs-on: ${{ matrix.os }}
@@ -140,6 +173,17 @@ jobs:
         steps:
         - name: Checkout SimTest
           uses: actions/checkout@v4
+
+        - name: Prepare tokens
+          # Prefer provided SIMTEST_PAT (from caller) over the automatic runner token
+          run: |
+            if [ -n "${{ secrets.SIMTEST_PAT || '' }}" ]; then
+              echo "GITHUB_TOKEN=${{ secrets.SIMTEST_PAT }}" >> $GITHUB_ENV
+              echo "SIMTEST_PAT_PROVIDED=true" >> $GITHUB_ENV
+            else
+              echo "GITHUB_TOKEN=${{ github.token }}" >> $GITHUB_ENV
+              echo "SIMTEST_PAT_PROVIDED=false" >> $GITHUB_ENV
+            fi
 
         - name: Pre-requisites (Windows)
           if: ${{ startsWith(matrix.os, 'windows') }}
@@ -230,10 +274,11 @@ jobs:
         - name: zip results
           run: zip -q -r ${{ matrix.batch }}-${{ matrix.os }}.zip ${{ matrix.batch }}
 
+          # Not using GITHUB_REPOSITORY here because the caller may be in a different repo
         - name: Upload .zip
           env:
-            GITHUB_TOKEN: ${{ github.token }}
             tag: ${{ needs.release.outputs.release_tag }}
           shell: bash
           run: |
-            gh release upload "$tag" ${{ matrix.batch }}-${{ matrix.os }}.zip
+            gh release upload "$tag" ${{ matrix.batch }}-${{ matrix.os }}.zip --repo="AntaresSimulatorTeam/SimTest"
+            gh release upload "$tag" ${{ matrix.batch }}-${{ matrix.os }}.zip --repo="AntaresSimulatorTeam/SimTest"
