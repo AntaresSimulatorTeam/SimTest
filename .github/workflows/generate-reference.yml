@@ -154,6 +154,7 @@ jobs:
             BATCHES=$(printf '"%s",' $(cat study-batches.txt) | sed "s/^/[/;s/,$/]/")
             echo "batches=$BATCHES" >> $GITHUB_OUTPUT
 
+        # Not using GITHUB_REPOSITORY here because the caller may be in a different repo
         - name: Upload study-batches.txt
           env:
             tag: ${{ steps.create_release.outputs.release_tag }}
@@ -273,6 +274,7 @@ jobs:
         - name: zip results
           run: zip -q -r ${{ matrix.batch }}-${{ matrix.os }}.zip ${{ matrix.batch }}
 
+          # Not using GITHUB_REPOSITORY here because the caller may be in a different repo
         - name: Upload .zip
           env:
             tag: ${{ needs.release.outputs.release_tag }}
