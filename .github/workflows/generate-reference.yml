@@ -117,12 +117,12 @@ jobs:
 
             echo "Creating release: tag=$tag title=$title target=$target_branch"
             echo "Repos is $GITHUB_REPOSITORY"
-            echo 'gh release create "$tag" \
+            echo 'gh release create $tag \
                 --repo="MarechalJason/SimTest" \
-                --title="$title" \
-                --target="$target_branch" \
-                --notes="Antares_Simulator: $antares_tag
-                Antares_Simulator_Tests_NR: $tests_tag $tests_note"'
+                --title=$title \
+                --target=$target_branch \
+                --notes=Antares_Simulator: $antares_tag
+                Antares_Simulator_Tests_NR: $tests_tag $tests_note'
             gh release create "$tag" \
                 --repo="MarechalJason/SimTest" \
                 --title="$title" \
