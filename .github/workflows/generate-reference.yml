@@ -1,8 +1,8 @@
 name: Reference generation
 
 permissions:
-  contents: write
-  actions: read
+  contents: write #Write tag to release
+  actions: read #Read workflows
 
 # Make this a reusable workflow callable via workflow_call
 on:
