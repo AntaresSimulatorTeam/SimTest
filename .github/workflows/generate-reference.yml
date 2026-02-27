@@ -84,12 +84,12 @@ jobs:
             # will belong to the caller and cannot create releases on this repo. Detect that
             # case early and require the caller to provide a PAT via the SIMTEST_PAT secret.
             caller_repo="$GITHUB_REPOSITORY"
-            target_repo="MarechalJason/SimTest"
+            target_repo="AntaresSimulatorTeam/SimTest"
             if [ "$caller_repo" != "$target_repo" ] && [ "${SIMTEST_PAT_PROVIDED:-false}" != "true" ]; then
               echo "ERROR: this reusable workflow is being called from a different repository: $caller_repo"
               echo "The GITHUB_TOKEN provided to callers cannot create releases in $target_repo."
               echo "Please call this workflow like this from the caller repository and provide a personal access token (SIMTEST_PAT) with repo permissions:"
-              echo "  jobs:\n    call:\n      uses: MarechalJason/SimTest/.github/workflows/generate-reference.yml@main\n      secrets: { SIMTEST_PAT: \\${{ secrets.SIMTEST_PAT }} }"
+              echo "  jobs:\n    call:\n      uses: AntaresSimulatorTeam/SimTest/.github/workflows/generate-reference.yml@main\n      secrets: { SIMTEST_PAT: \\${{ secrets.SIMTEST_PAT }} }"
               echo "Alternatively, run the workflow from the target repository so the runner's token has the proper permissions."
               exit 1
             fi
@@ -116,7 +116,7 @@ jobs:
             title="SimTest reference generation $tag"
 
             gh release create "$tag" \
-                --repo="MarechalJason/SimTest" \
+                --repo="AntaresSimulatorTeam/SimTest" \
                 --title="$title" \
                 --target="$target_branch" \
                 --notes="Antares_Simulator: $antares_tag
@@ -158,7 +158,7 @@ jobs:
           env:
             tag: ${{ steps.create_release.outputs.release_tag }}
           run: |
-            gh release upload "$tag" study-batches.txt --repo="MarechalJason/SimTest"
+            gh release upload "$tag" study-batches.txt --repo="AntaresSimulatorTeam/SimTest"
 
     generation:
         runs-on: ${{ matrix.os }}
@@ -278,4 +278,5 @@ jobs:
             tag: ${{ needs.release.outputs.release_tag }}
           shell: bash
           run: |
-            gh release upload "$tag" ${{ matrix.batch }}-${{ matrix.os }}.zip --repo="MarechalJason/SimTest"
+            gh release upload "$tag" ${{ matrix.batch }}-${{ matrix.os }}.zip --repo="AntaresSimulatorTeam/SimTest"
+            gh release upload "$tag" ${{ matrix.batch }}-${{ matrix.os }}.zip --repo="AntaresSimulatorTeam/SimTest"
