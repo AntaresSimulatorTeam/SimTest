@@ -115,19 +115,6 @@ jobs:
             # Title derived from Antares tag to avoid duplication
             title="SimTest reference generation $tag"
 
-            echo "Creating release: tag=$tag title=$title target=$target_branch"
-            echo "Repos is $GITHUB_REPOSITORY"
-            echo "Antares_Simulator tag is $antares_tag"
-            echo "Antares_Simulator_Tests_NR tag is $tests_tag"
-            echo "Release tag is $tag"
-            echo "Release note: $note_scope"
-            echo "Tests note: $tests_note"
-            echo "gh release create $tag \
-                --repo=MarechalJason/SimTest \
-                --title=$title \
-                --target=$target_branch \
-                --notes=Antares_Simulator: $antares_tag
-                Antares_Simulator_Tests_NR: $tests_tag $tests_note"
             gh release create "$tag" \
                 --repo="MarechalJason/SimTest" \
                 --title="$title" \
