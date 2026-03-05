@@ -49,6 +49,8 @@ jobs:
       steps:
         - name: Checkout SimTest
           uses: actions/checkout@v4
+          with:
+            repository: AntaresSimulatorTeam/SimTest
 
         - name: Prepare tokens
           # Prefer provided SIMTEST_PAT (from caller) over the automatic runner token
@@ -174,6 +176,7 @@ jobs:
         - name: Checkout SimTest
           uses: actions/checkout@v4
           with:
+            repository: AntaresSimulatorTeam/SimTest
             path: simtest
 
         - name: Prepare tokens
