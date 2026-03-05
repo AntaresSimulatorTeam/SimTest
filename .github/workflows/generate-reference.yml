@@ -173,6 +173,8 @@ jobs:
         steps:
         - name: Checkout SimTest
           uses: actions/checkout@v4
+          with:
+            path: simtest
 
         - name: Prepare tokens
           # Prefer provided SIMTEST_PAT (from caller) over the automatic runner token
@@ -255,13 +257,15 @@ jobs:
           if: ${{ startsWith(matrix.os, 'ubuntu') }}
           run: |
             ANTARES_TAG=${{ needs.release.outputs.antares_tag }}
-            python3 scripts/generate_reference.py ${{ matrix.batch }} antares-solver
+            export PYTHONPATH="${PYTHONPATH:+$PYTHONPATH:}$PWD/simtest/scripts"
+            python3 simtest/scripts/generate_reference.py ${{ matrix.batch }} antares-solver
 
         - name: Generate results (Windows)
           if: ${{ startsWith(matrix.os, 'windows') }}
           run: |
             ANTARES_TAG=${{ needs.release.outputs.antares_tag }}
-            python3 scripts/generate_reference.py ${{ matrix.batch }} antares-solver.exe
+            export PYTHONPATH="${PYTHONPATH:+$PYTHONPATH:}$PWD/simtest/scripts"
+            python3 simtest/scripts/generate_reference.py ${{ matrix.batch }} antares-solver.exe
           shell: bash
 
         - name: Write tags to file
