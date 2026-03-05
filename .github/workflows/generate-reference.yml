@@ -179,7 +179,8 @@ jobs:
             repository: AntaresSimulatorTeam/SimTest
             path: simtest
 
-        - name: Prepare tokens
+        - name: Prepare tokens (Ubuntu)
+          if: ${{ startsWith(matrix.os, 'ubuntu') }}
           # Prefer provided SIMTEST_PAT (from caller) over the automatic runner token
           run: |
             if [ -n "${{ secrets.SIMTEST_PAT || '' }}" ]; then
@@ -189,6 +190,20 @@ jobs:
               echo "GITHUB_TOKEN=${{ github.token }}" >> $GITHUB_ENV
               echo "SIMTEST_PAT_PROVIDED=false" >> $GITHUB_ENV
             fi
+          shell: bash
+
+        - name: Prepare tokens (Windows)
+          if: ${{ startsWith(matrix.os, 'windows') }}
+          # Prefer provided SIMTEST_PAT (from caller) over the automatic runner token (PowerShell version)
+          run: |
+            if (-not [string]::IsNullOrEmpty("${{ secrets.SIMTEST_PAT || '' }}")) {
+              Add-Content -Path $env:GITHUB_ENV -Value "GITHUB_TOKEN=${{ secrets.SIMTEST_PAT }}"
+              Add-Content -Path $env:GITHUB_ENV -Value "SIMTEST_PAT_PROVIDED=true"
+            } else {
+              Add-Content -Path $env:GITHUB_ENV -Value "GITHUB_TOKEN=${{ github.token }}"
+              Add-Content -Path $env:GITHUB_ENV -Value "SIMTEST_PAT_PROVIDED=false"
+            }
+          shell: pwsh
 
         - name: Pre-requisites (Windows)
           if: ${{ startsWith(matrix.os, 'windows') }}
