@@ -276,14 +276,14 @@ jobs:
           run: |
             ANTARES_TAG=${{ needs.release.outputs.antares_tag }}
             export PYTHONPATH="${PYTHONPATH:+$PYTHONPATH:}$PWD/simtest/scripts"
-            python3 simtest/scripts/generate_reference.py ${{ matrix.batch }} antares-solver
+            python3 simtest/scripts/generate_reference.py ${{ matrix.batch }} antares-8.8-solver
 
         - name: Generate results (Windows)
           if: ${{ startsWith(matrix.os, 'windows') }}
           run: |
             ANTARES_TAG=${{ needs.release.outputs.antares_tag }}
             export PYTHONPATH="${PYTHONPATH:+$PYTHONPATH:}$PWD/simtest/scripts"
-            python3 simtest/scripts/generate_reference.py ${{ matrix.batch }} antares-solver.exe
+            python3 simtest/scripts/generate_reference.py ${{ matrix.batch }} antares-8.8-solver.exe
           shell: bash
 
         - name: Write tags to file
