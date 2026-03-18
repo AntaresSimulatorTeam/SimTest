@@ -148,7 +148,7 @@ jobs:
           run: |
             set -euo pipefail
             echo "Using release tag ${{ env.ANTARES_TESTS_TAG }} to download study-batches.txt"
-            wget https://github.com/AntaresSimulatorTeam/Antares_Simulator_Tests_NR/releases/download/${{ env.ANTARES_TESTS_TAG }}/study-batches.txt
+            wget https://github.com/AntaresSimulatorTeam/Antares_Simulator_Tests_NR/releases/download/${{env.ANTARES_TESTS_TAG}}/study-batches.txt
 
         - name: Read study-batches.txt
           id: read_batches
