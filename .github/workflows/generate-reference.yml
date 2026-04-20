@@ -48,7 +48,7 @@ jobs:
 
       steps:
         - name: Checkout SimTest
-          uses: actions/checkout@v4
+          uses: actions/checkout@v6
           with:
             repository: AntaresSimulatorTeam/SimTest
 
@@ -132,7 +132,7 @@ jobs:
 
         - name: Checkout Antares_Simulator_Tests_NR (main)
           if: ${{ env.ANTARES_TESTS_TAG == '' }}
-          uses: actions/checkout@v4
+          uses: actions/checkout@v6
           with:
             repository: AntaresSimulatorTeam/Antares_Simulator_Tests_NR
             ref: main
@@ -174,7 +174,7 @@ jobs:
 
         steps:
         - name: Checkout SimTest
-          uses: actions/checkout@v4
+          uses: actions/checkout@v6
           with:
             repository: AntaresSimulatorTeam/SimTest
             path: simtest
@@ -225,7 +225,7 @@ jobs:
 
         - name: Checkout Antares_Simulator_Tests_NR (main)
           if: ${{ needs.release.outputs.antares_tests_tag == 'main' }}
-          uses: actions/checkout@v4
+          uses: actions/checkout@v6
           with:
             repository: AntaresSimulatorTeam/Antares_Simulator_Tests_NR
             ref: main
