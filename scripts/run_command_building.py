@@ -18,7 +18,8 @@ def make_command_to_run(path_where_to_find_exe, batch_name, study_path):
         command_to_run.append('--named-mps-problems')
 
     if batch_name == "valid-simu-tables":
-        command_to_run.append('--output=simulation-tables --simulation-table-stages=optim-nb-1')
+        command_to_run.append('--output=simulation-tables')
+        command_to_run.append('--simulation-table-stages=optim-nb-1')
 
     return command_to_run
 
